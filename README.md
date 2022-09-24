@@ -1,0 +1,1 @@
+Placeholder for now.  The Master branch contains Version 1.3 of the Magic Schools plugin, which should be the last known stable version (don't bet your life on it in this case).  The Working branch will have the latest version, albeit potentially unstable.
