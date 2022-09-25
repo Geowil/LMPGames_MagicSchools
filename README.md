@@ -1,0 +1,1 @@
+Placeholder for now.  This is the working branch for the Magic Schools plugin.  This will be the latest working version of the plugin.  It may contain bugs or other problems so use at your own risk.  
