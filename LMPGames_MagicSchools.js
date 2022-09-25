@@ -4118,7 +4118,7 @@ function orderEffects(effects){
 }
 
 function hasNoEffects(entryEffects){
-	let isEmpty = true; 8
+	let isEmpty = true;
 
 	if (entryEffects == undefined || entryEffects == null){
 		return true;
