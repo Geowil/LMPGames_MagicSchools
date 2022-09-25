@@ -2294,6 +2294,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 	let currPrtyGold = $gameParty.gold();
 	let currPrtyItems = 0;
 	let costItemId = 0;
+	let bRequirementsMet = true;
 
 	this.changePaintOpacity(true);
 
@@ -2359,7 +2360,15 @@ Window_SchoolList.prototype.drawItem = function(index){
 			}
 		}
 
-		if (goldCost <= currPrtyGold || itemCost <= currPrtyItems){
+		if (bEnableGoldCost && currPrtyGold < goldCost) {
+			bRequirementsMet = false;
+		}
+
+		if (bEnableItemCost && currPrtyItems < itemCost) {
+			bRequirementsMet = false;
+		}
+
+		if (bRequirementsMet){
 			this.changePaintOpacity(true);
 		} else{
 			this.changePaintOpacity(false);
@@ -2596,8 +2605,6 @@ Window_SchoolList.prototype.processOk = function(){
 						schoolSecdConfig,
 						schoolIds
 					);
-
-
 				}
 
 				if (bEnableItemCost){
@@ -2616,16 +2623,12 @@ Window_SchoolList.prototype.processOk = function(){
 				}
 			}
 
-			if (bEnableGoldCost && this._comList[this._pageIndex][this._index].includes(TextManager.currencyUnit)) {
-				if (goldCost > currPrtyGold) {
-					bReqsMet = false;
-				}
+			if (bEnableGoldCost && goldCost > currPrtyGold) {
+				bReqsMet = false;
 			}
 
-			if (bEnableItemCost && dataItm && this._comList[this._pageIndex][this._index].includes(dataItm.name)) {
-				if (itemCostr > currPrtyItems) {
-					bReqsMet = false;
-				}
+			if (bEnableItemCost && dataItm && itemCostr > currPrtyItems) {
+				bReqsMet = false;
 			}
 
 			if (!bReqsMet){
@@ -3205,7 +3208,7 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		let currPrtyItems = 0;
 		let goldCost = 0;
 		let itemCost = 0;
-		let bDoesNotMeetRequirements = false;
+		let bMeetsRequirements = true;
 
 		if (skillData) {
 			if (skillData.ReqLevel <= actLevel) {
@@ -3237,28 +3240,21 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 					);
 				}
 			} else {
-				bDoesNotMeetRequirements = true;
+				bMeetsRequirements = false;
 			}
 		} else {
-			bDoesNotMeetRequirements = true;
-		}
-		if (bEnableGoldCost) {
-			if (!bDoesNotMeetRequirements) {
-				if (currPrtyGold < goldCost) {
-					bDoesNotMeetRequirements = true;
-				}
-			}
+			bMeetsRequirements = false;
 		}
 
-		if (bEnableItemCost) {
-			if (!bDoesNotMeetRequirements) {
-				if (currPrtyItems < itemCost) {
-					bDoesNotMeetRequirements = true;
-				}
-			}
+		if (bEnableGoldCost && currPrtyGold < goldCost) {
+			bMeetsRequirements = false;
 		}
 
-		if (bDoesNotMeetRequirements) {
+		if (bEnableItemCost && currPrtyItems < itemCost) {
+			bMeetsRequirements = true;
+		}
+
+		if (!bMeetsRequirements) {
 			this.changePaintOpacity(false);
 		} else {
 			this.changePaintOpacity(true);
@@ -3494,7 +3490,7 @@ Window_SchoolSpellList.prototype.processOk = function(){
 			let itemCost = 0;
 			let currPrtyGold = $gameParty.gold();
 			let currPrtyItems = 0;
-			let bDoesNotMeetRequirements = false;
+			let bMeetsRequirements = true;
 
 			if (Object.keys(this._selectedActor).length > 0){
 				let actLevel = this._selectedActor._level;
@@ -3535,30 +3531,22 @@ Window_SchoolSpellList.prototype.processOk = function(){
 							);
 						}
 					} else {
-						bDoesNotMeetRequirements = true;
+						bMeetsRequirements = false;
 					}
 				} else {
-					bDoesNotMeetRequirements = true;
+					bMeetsRequirements = false;
 				}
 			}
 
-			if (bEnableGoldCost) {
-				if (!bDoesNotMeetRequirements) {
-					if (currPrtyGold < goldCost) {
-						bDoesNotMeetRequirements = true;
-					}
-				}
+			if (bEnableGoldCost && currPrtyGold < goldCost) {
+				bMeetsRequirements = false;
 			}
 
-			if (bEnableItemCost) {
-				if (!bDoesNotMeetRequirements) {
-					if (currPrtyItems < itemCost) {
-						bDoesNotMeetRequirements = true;
-					}
-				}
+			if (bEnableItemCost && currPrtyItems < itemCost) {
+				bMeetsRequirements = false;
 			}
 
-			if (bDoesNotMeetRequirements) {
+			if (!bMeetsRequirements) {
 				SoundManager.playCancel();
 			} else {
 				this._selectedSkillId = spellId;
