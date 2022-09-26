@@ -132,6 +132,12 @@
 * @default {}
 *
 *
+* @param School 8
+* @desc Allows you to define a magic spell schools
+* @type struct<School>
+* @default {}
+*
+*
 * @help
 *
 *
@@ -972,6 +978,8 @@ Scene_MagicSchools.prototype.initialize = function(){
 	this._selAct = {};
 	this._classId = 0;
 	this._goldCost = 0;
+	this._itemCost = 0;
+	this._itemData = {};
 }
 
 Scene_MagicSchools.prototype.create = function() {
@@ -1132,7 +1140,7 @@ Scene_MagicSchools.prototype.mainMenuOptionSelected = function(){
 		this._schoolSchListWnd.activate();
 		this._schoolSchListWnd.select(0);
 
-		if (bEnableGoldCost){
+		if (bEnableGoldCost || bEnableItemCost){
 			this._schoolCostWnd.show();
 		}
 	} if (this._sceneMode == 3){
@@ -1221,7 +1229,15 @@ Scene_MagicSchools.prototype.schoolListSchSelected = function(){
 	this._schoolSchListWnd.deselect();
 
 	if (wndMode == 0){
-		this._goldCost = this._schoolSchListWnd.getGoldCost();
+		if (bEnableGoldCost) {
+			this._goldCost = this._schoolCostWnd.getGoldCost();
+		}
+
+		if (bEnableItemCost) {
+			this._itemCost = this._schoolCostWnd.getItemCost();
+			this._itemData = this._schoolCostWnd.getDataItem();
+		}
+
 		this._schoolCmdWnd.setMode(0);
 		this._schoolCmdWnd.show();
 		this._schoolCmdWnd.activate();
@@ -1299,6 +1315,7 @@ Scene_MagicSchools.prototype.goBackToSchoolList = function() {
 	this._schoolSchListWnd.show();
 	this._schoolSchListWnd.activate();
 	this._schoolSchListWnd.select(0);
+
 }
 
 Scene_MagicSchools.prototype.createSpellListWindow = function(){
@@ -1317,7 +1334,14 @@ Scene_MagicSchools.prototype.createSpellListWindow = function(){
 
 Scene_MagicSchools.prototype.schoolSpellSelected = function(){
 	this._selectedSkillId = this._schoolSpellListWnd.getSelectedSpellId();
-	this._goldCost = this._schoolSpellListWnd.getGoldCost();
+	if (bEnableGoldCost) {
+		this._goldCost = this._schoolCostWnd.getGoldCost();
+	}
+
+	if (bEnableItemCost) {
+		this._itemCost = this._schoolCostWnd.getItemCost();
+		this._itemData = this._schoolCostWnd.getDataItem();
+	}
 
 	this._schoolSpellListWnd.deactivate();
 	this._schoolSpellListWnd.deselect();
@@ -1424,6 +1448,10 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		this._schoolGoldWnd.refresh();
 	}
 
+	if (bEnableItemCost) {
+		$gameParty.loseItem(this._dataItm, this._itemCost);
+	}
+
 	//Enable crafting of next skill in tree; make optional in later version for plugin command option $magicSchoolsData
 	if (this._selectedSchoolId > 0 && this._selectedSchoolType >= 0 && this._selectedTreeId > 0){
 		let currTree = {};
@@ -1439,9 +1467,16 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		if (Object.keys(currTree).length > 0){
 			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++){
 				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1){
-					if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){
-						$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
+					if (bEnableMagicCrafting) {
+						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){						
+							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
+						}
+
 						break;
+					} else {
+						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn){
+							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn = true;
+						}
 					}
 				}
 			}
@@ -2294,6 +2329,8 @@ Window_SchoolList.prototype.drawItem = function(index){
 	let currPrtyGold = $gameParty.gold();
 	let currPrtyItems = 0;
 	let costItemId = 0;
+	let bRequirementsMet = true;
+	let dataItm = undefined;
 
 	this.changePaintOpacity(true);
 
@@ -2331,7 +2368,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 
 			if (bEnableItemCost){
 				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 				if (dataItm){
 					currPrtyItems = $gameParty.numItems(dataItm);
 				}
@@ -2359,7 +2396,15 @@ Window_SchoolList.prototype.drawItem = function(index){
 			}
 		}
 
-		if (goldCost <= currPrtyGold || itemCost <= currPrtyItems){
+		if (bEnableGoldCost && currPrtyGold < goldCost) {
+			bRequirementsMet = false;
+		}
+
+		if (bEnableItemCost && dataItm && currPrtyItems < itemCost) {
+			bRequirementsMet = false;
+		}
+
+		if (bRequirementsMet){
 			this.changePaintOpacity(true);
 		} else{
 			this.changePaintOpacity(false);
@@ -2580,6 +2625,7 @@ Window_SchoolList.prototype.processOk = function(){
 			let currPrtyItems = 0;
 			let costItemId = 0;
 			let bReqsMet = true;
+			let dataItm = undefined;
 
 			this._selectedSchoolId = this._schoolIdList[this._pageIndex][this._index];
 			if (Object.keys(this._selectedActor).length > 0 && this._selectedMode == 0){
@@ -2596,13 +2642,11 @@ Window_SchoolList.prototype.processOk = function(){
 						schoolSecdConfig,
 						schoolIds
 					);
-
-
 				}
 
 				if (bEnableItemCost){
 					costItemId = getSchoolCostItemId(this._selectedSchoolId);
-					let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
 					}
@@ -2616,16 +2660,12 @@ Window_SchoolList.prototype.processOk = function(){
 				}
 			}
 
-			if (bEnableGoldCost && this._comList[this._pageIndex][this._index].includes(TextManager.currencyUnit)) {
-				if (goldCost > currPrtyGold) {
-					bReqsMet = false;
-				}
+			if (bEnableGoldCost && goldCost > currPrtyGold) {
+				bReqsMet = false;
 			}
 
-			if (bEnableItemCost && dataItm && this._comList[this._pageIndex][this._index].includes(dataItm.name)) {
-				if (itemCostr > currPrtyItems) {
-					bReqsMet = false;
-				}
+			if (bEnableItemCost && dataItm && itemCost > currPrtyItems) {
+				bReqsMet = false;
 			}
 
 			if (!bReqsMet){
@@ -3205,7 +3245,8 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		let currPrtyItems = 0;
 		let goldCost = 0;
 		let itemCost = 0;
-		let bDoesNotMeetRequirements = false;
+		let bMeetsRequirements = true;
+		let dataItm = undefined;
 
 		if (skillData) {
 			if (skillData.ReqLevel <= actLevel) {
@@ -3221,8 +3262,8 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 				}
 
 				if (bEnableItemCost){
-					costItemId = getSkillCostItemId();
-					let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
 					}
@@ -3237,28 +3278,21 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 					);
 				}
 			} else {
-				bDoesNotMeetRequirements = true;
+				bMeetsRequirements = false;
 			}
 		} else {
-			bDoesNotMeetRequirements = true;
-		}
-		if (bEnableGoldCost) {
-			if (!bDoesNotMeetRequirements) {
-				if (currPrtyGold < goldCost) {
-					bDoesNotMeetRequirements = true;
-				}
-			}
+			bMeetsRequirements = false;
 		}
 
-		if (bEnableItemCost) {
-			if (!bDoesNotMeetRequirements) {
-				if (currPrtyItems < itemCost) {
-					bDoesNotMeetRequirements = true;
-				}
-			}
+		if (bEnableGoldCost && currPrtyGold < goldCost) {
+			bMeetsRequirements = false;
 		}
 
-		if (bDoesNotMeetRequirements) {
+		if (bEnableItemCost && dataItm && currPrtyItems < itemCost) {
+			bMeetsRequirements = true;
+		}
+
+		if (!bMeetsRequirements) {
 			this.changePaintOpacity(false);
 		} else {
 			this.changePaintOpacity(true);
@@ -3494,7 +3528,8 @@ Window_SchoolSpellList.prototype.processOk = function(){
 			let itemCost = 0;
 			let currPrtyGold = $gameParty.gold();
 			let currPrtyItems = 0;
-			let bDoesNotMeetRequirements = false;
+			let bMeetsRequirements = true;
+			let dataItm = undefined;
 
 			if (Object.keys(this._selectedActor).length > 0){
 				let actLevel = this._selectedActor._level;
@@ -3519,8 +3554,8 @@ Window_SchoolSpellList.prototype.processOk = function(){
 						}
 
 						if (bEnableItemCost){
-							costItemId = getSkillCostItemId();
-							let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+							costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+							dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 							if (dataItm){
 								currPrtyItems = $gameParty.numItems(dataItm);
 							}
@@ -3535,34 +3570,25 @@ Window_SchoolSpellList.prototype.processOk = function(){
 							);
 						}
 					} else {
-						bDoesNotMeetRequirements = true;
+						bMeetsRequirements = false;
 					}
 				} else {
-					bDoesNotMeetRequirements = true;
+					bMeetsRequirements = false;
 				}
 			}
 
-			if (bEnableGoldCost) {
-				if (!bDoesNotMeetRequirements) {
-					if (currPrtyGold < goldCost) {
-						bDoesNotMeetRequirements = true;
-					}
-				}
+			if (bEnableGoldCost && currPrtyGold < goldCost) {
+				bMeetsRequirements = false;
 			}
 
-			if (bEnableItemCost) {
-				if (!bDoesNotMeetRequirements) {
-					if (currPrtyItems < itemCost) {
-						bDoesNotMeetRequirements = true;
-					}
-				}
+			if (bEnableItemCost && dataItm && currPrtyItems < itemCost) {
+				bMeetsRequirements = false;
 			}
 
-			if (bDoesNotMeetRequirements) {
+			if (!bMeetsRequirements) {
 				SoundManager.playCancel();
 			} else {
 				this._selectedSkillId = spellId;
-				this._goldCost = goldCost;
 				Window_Selectable.prototype.processOk.apply(this);
 			}
 		} else{
@@ -3688,6 +3714,9 @@ Window_SchoolCost.prototype.initialize = function(x, y, w, h){
 	this._selectedTreeId = 0;
 	this._selectedSkillId = 0;
 	this._mode = -1;
+	this._goldCost = 0;
+	this._itemCost = 0;
+	this._dataItm = {};
 	Window_Selectable.prototype.initialize.call(this, x, y, w, h);
 	this.refresh();
 }
@@ -3700,6 +3729,9 @@ Window_SchoolCost.prototype.setActorData = function(selAct){
 Window_SchoolCost.prototype.getHeight = function() { return this._height; }
 Window_SchoolCost.prototype.getWidth = function() { return this._width; }
 Window_SchoolCost.prototype.maxItems = function() { return this._comList ? this._comList.length : 1; }
+Window_SchoolCost.prototype.getGoldCost = function() { return this._goldCost; }
+Window_SchoolCost.prototype.getItemCost = function() { return this._itemCost; }
+Window_SchoolCost.prototype.getDataItem = function() { return this._dataItm; }
 Window_SchoolCost.prototype.numVisibleRows = function() { return 3; }
 Window_SchoolCost.prototype.setMode = function(newMode, selAct, selSchType, selSchId, selTreeId, selSkId) {
 	this._mode = newMode;
@@ -3761,7 +3793,7 @@ Window_SchoolCost.prototype.drawItem = function(index){
 		let currPrtyItems = 0;
 		let goldCost = 0;
 		let itemCost = 0;
-		let dataItm = {};
+		let dataItm = undefined;
 		let currCommand = this._comList[index];
 		let bMeetsLevelReq = true;
 		if (this._mode == 0) {
@@ -3776,7 +3808,7 @@ Window_SchoolCost.prototype.drawItem = function(index){
 
 			if (bEnableItemCost){
 				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 				if (dataItm){
 					currPrtyItems = $gameParty.numItems(dataItm);
 				}
@@ -3809,8 +3841,8 @@ Window_SchoolCost.prototype.drawItem = function(index){
 					}
 
 					if (bEnableItemCost){
-						costItemId = getSkillCostItemId();
-						let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 						if (dataItm){
 							currPrtyItems = $gameParty.numItems(dataItm);
 						}
@@ -3843,7 +3875,7 @@ Window_SchoolCost.prototype.drawItem = function(index){
 		}
 
 		if (bEnableItemCost && dataItm && this._comList[index].includes(dataItm.name)) {
-			if (itemCostr <= currPrtyItems) {
+			if (itemCost <= currPrtyItems) {
 				this.resetTextColor();
 			} else {
 				this.changeTextColor(reqNotMetColor);
@@ -3852,7 +3884,7 @@ Window_SchoolCost.prototype.drawItem = function(index){
 
 		if (!dataItm || (dataItm && !this._comList[index].includes(dataItm.name))) {
 			this.drawText(this._comList[index], rect.x, y, w , 'center');
-		} else {
+		} else if (dataItm) {
 			this.drawTextEx(this._comList[index], rect.x, y)
 		}
 	}
@@ -3893,7 +3925,7 @@ Window_SchoolCost.prototype.buildComList = function(){
 		let currPrtyItems = 0;
 		let goldCost = 0;
 		let itemCost = 0;
-		let dataItm = {};
+		let dataItm = undefined;
 
 		if (this._mode == 0){
 			if (bEnableGoldCost){
@@ -3907,7 +3939,7 @@ Window_SchoolCost.prototype.buildComList = function(){
 
 			if (bEnableItemCost){
 				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 				if (dataItm){
 					currPrtyItems = $gameParty.numItems(dataItm);
 				}
@@ -3936,8 +3968,8 @@ Window_SchoolCost.prototype.buildComList = function(){
 				}
 
 				if (bEnableItemCost){
-					costItemId = getSkillCostItemId();
-					let dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
+					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
 					}
@@ -3953,6 +3985,10 @@ Window_SchoolCost.prototype.buildComList = function(){
 				}
 			}
 		}
+
+		this._goldCost = goldCost;
+		this._itemCost = itemCost;
+		this._dataItm = (!dataItm ? {} : dataItm);
 
 		if (bEnableGoldCost) { this._comList.push("Required " + TextManager.currencyUnit + ": " + String(goldCost)); } //TODO: Currency icon
 		if (bEnableItemCost) {
