@@ -1467,9 +1467,16 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		if (Object.keys(currTree).length > 0){
 			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++){
 				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1){
-					if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){
-						$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
+					if (bEnableMagicCrafting) {
+						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){						
+							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
+						}
+
 						break;
+					} else {
+						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn){
+							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn = true;
+						}
 					}
 				}
 			}
