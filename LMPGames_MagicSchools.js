@@ -17,6 +17,12 @@
 * @default false
 *
 *
+* @param Enable Spell Auto-Unlock
+* @desc When enabled, will allow the next spell in the same tree to be unlocked automatically.  See gitHub for more info.
+* @type boolean
+* @default false
+*
+*
 * @param Spell Info Display Mode
 * @desc Sets how the spell list while selecting a tree is displayed.  See GitHub for more info.
 * @type number
@@ -557,6 +563,7 @@ var obfuscationChar = geowilMagicSchoolsParams['Obfuscation Character'];
 var reqNotMetColor = geowilMagicSchoolsParams['Requirement Not Met Color'];
 var maxObfuscationChars = parseInt(geowilMagicSchoolsParams['Max Obfuscation Characters']);
 var bDataWasLoaded = false;
+var bEnableAutoUnlock = (geowilMagicSchoolParams['Enable Apell Auto-Unlock']);
 var $magicSchoolsData = {};
 
 var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
@@ -1051,10 +1058,10 @@ Scene_MagicSchools.prototype.schoolCharSelected = function(){
 
 Scene_MagicSchools.prototype.exitSchoolScene = function() { SceneManager.pop(); }
 Scene_MagicSchools.prototype.createInfoWindow = function() {
-	let x = 240 + 10;
+	let x = 288 + 10;
 	let y = this._helpWindow.height + 10;
 	let w = Graphics.width - x;
-	let h = Graphics.height - y - 90;
+	let h = Graphics.height - y - 45;
 
 	this._schoolInfoWnd = new Window_SchoolInfo(x, y, w, h);
 	this._schoolInfoWnd.setHandler('ok', this.openSchoolCmd.bind(this));
@@ -1078,7 +1085,7 @@ Scene_MagicSchools.prototype.schoolGoBackToSpellSelect = function(){
 
 Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
 	let y = this._schoolMainWnd.getHeight() +
-		this._schoolCostWnd.getHeight() + this._helpWindow.height + 20;
+		this._schoolCostWnd.getHeight() + this._helpWindow.height + 67;
 	let x = 0;
 
 	this._schoolGoldWnd = new Window_Gold(x, y);
@@ -1089,8 +1096,8 @@ Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
 Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
-	let w = 240;
-	let h = 90;
+	let w = 288;
+	let h = 125;
 
 	this._schoolLimitsWnd = new Window_SchoolLimits(x, y, w, h);
 	this._schoolLimitsWnd.hide();
@@ -1100,8 +1107,8 @@ Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 Scene_MagicSchools.prototype.createSchoolCostWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height;
 	let x = 0;
-	let w = 240;
-	let h = 120;
+	let w = 288;
+	let h = 150;
 
 	this._schoolCostWnd = new Window_SchoolCost(x, y, w, h);
 	this._schoolCostWnd.hide();
@@ -1113,7 +1120,7 @@ Scene_MagicSchools.prototype.createMainWindow = function() {
 	let y = this._helpWindow.height + 10
 
 	let h = 210;
-	let w = 240;
+	let w = 288;
 
 	this._schoolMainWnd = new Window_SchoolMain(x, y, w, h, this._schoolInfoWnd);
 	this._schoolMainWnd.setHandler('ok', this.mainMenuOptionSelected.bind(this));
@@ -1170,7 +1177,7 @@ Scene_MagicSchools.prototype.createSchoolTypeListWindow = function(){
 	let y = this._helpWindow.height + 10
 
 	let h = 165;
-	let w = 240;
+	let w = 288;
 
 	this._schoolSchTypeListWnd = new Window_SchoolTypeList(x, y, w, h);
 	this._schoolSchTypeListWnd.setHandler('ok', this.schoolTypeSelected.bind(this));
@@ -1214,7 +1221,7 @@ Scene_MagicSchools.prototype.createSchoolListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10;
 	let h = 180;
-	let w = 240;
+	let w = 288;
 
 	this._schoolSchListWnd = new Window_SchoolList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
 	this._schoolSchListWnd.setHandler('ok', this.schoolListSchSelected.bind(this));
@@ -1284,7 +1291,7 @@ Scene_MagicSchools.prototype.createSchoolTreeListWindow = function(){
 	let y = this._helpWindow.height + 10
 
 	let h = 180;
-	let w = 240;
+	let w = 288;
 
 	this._schoolTreeListWnd = new Window_SchoolTreeList(x, y, w, h, this._schoolInfoWnd, this._helpWindow);
 	this._schoolTreeListWnd.setHandler('ok', this.schoolTreeSelected.bind(this));
@@ -1323,7 +1330,7 @@ Scene_MagicSchools.prototype.createSpellListWindow = function(){
 	let y = this._helpWindow.height + 10
 
 	let h = 180;
-	let w = 240;
+	let w = 288;
 
 	this._schoolSpellListWnd = new Window_SchoolSpellList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
 	this._schoolSpellListWnd.setHandler('ok', this.schoolSpellSelected.bind(this));
@@ -1464,18 +1471,21 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 			}
 		}
 
-		if (Object.keys(currTree).length > 0){
-			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++){
-				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1){
-					if (bEnableMagicCrafting) {
-						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){						
-							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
-						}
+		if (Object.keys(currTree).length > 0) {
+			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++) {
+				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1) {
+					let skillData = $dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]);
+					if (skillData) {
+						if (bEnableMagicCrafting) {
+							if (!skillData.CanCraft && bEnableAutoUnlock) {
+								skillData.CanCraft = true;
+							}
 
-						break;
-					} else {
-						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn){
-							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn = true;
+							break;
+						} else {
+							if (!skillData.CanLearn && bEnableAutoUnlock) {
+								skillData.CanLearn = true;
+							}
 						}
 					}
 				}
