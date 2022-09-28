@@ -714,11 +714,11 @@ DataManager.createMagicSchoolsData = function(){
 DataManager.buildMagicSchoolsData = function(){
 	let bMagicSchoolDataCreated = false;
 	let i1 = 1;
-	let maxSchools = Object.keys(geowilMagicSchoolsParams).filter(key => key.contains("School") &&
+	let maxSchools = Object.keys(lmpGamesMagicSchoolsParams).filter(key => key.contains("School") &&
 		!key.contains("Additional") && !key.contains("Initial") && !key.contains("Secondary")).length;
 
 	while (!bMagicSchoolDataCreated){
-		let currSchool = geowilMagicSchoolsParams['School ' + i1];
+		let currSchool = lmpGamesMagicSchoolsParams['School ' + i1];
 		let parsedSchool = JSON.parse(currSchool);
 
 		if (Object.keys(parsedSchool).length > 0){
