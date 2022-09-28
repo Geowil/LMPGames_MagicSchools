@@ -3784,7 +3784,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		let itemCost = 0;
 		let dataItm = undefined;
 		let bMeetsLevelReq = true;
-		let infoFormat = "%1%2";
+		let infoFormat = JSON.parse(spellInfoFmtTxt);
 		let bEnableWordwrap = false;
 		let title = "Cost Requirements";
 		let wndInfo = "";
@@ -3885,15 +3885,29 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		}
 
 		let totalText = "";
-		totalText = totalText.concat(title, wndInfo);
-		let text = infoFormat.format(title, wndInfo);
+		totalText = totalText.concat(title, wndInfo, "", "", "", "");
+		let text = infoFormat.format(title, wndInfo, "", "", "", "");
 		let textState = {};
 
 		if (totalText.length > 0){
 			textState = { index: 0 };
 			textState.originalText = text;
 			textState.text = this.convertEscapeCharacters(text);
-			this._allTextHeight = this.calcTextHeight(textState, true);
+			let convertedTextHeight = this.calcTextHeight(textState, true);
+			this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
+
+			if (bEnableWordwrap) {
+				var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
+				var multi2 =  6;
+				let multi3 = (txtLen >= 600 ? 4 : 10);
+				var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
+
+				this._allTextHeight += this._allTextHeight * 0.25;
+				let numOfBreaks = text.match(/<br>/g).length;
+				this._allTextHeight += numOfBreaks * 15;
+			} else {
+				this._allTextHeight = 2;
+			}
 
 			this.createContents();
 			this.drawTextEx(text, 0, 0);
@@ -3916,7 +3930,7 @@ Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt
 			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	} else if (typ == "level") {
-		reqString =  + "Level: " + String(cost);
+		reqString = "Level: " + String(cost);
 
 		if (currAmt < cost){
 			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
