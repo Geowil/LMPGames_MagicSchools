@@ -93,7 +93,7 @@
 * @desc Sets the color used when the player has cannot
 * use a catalyst when crafting
 * @type text
-* @default #8A0000
+* @default 8A0000
 *
 *
 * @param School 1
@@ -563,7 +563,7 @@ var obfuscationChar = geowilMagicSchoolsParams['Obfuscation Character'];
 var reqNotMetColor = geowilMagicSchoolsParams['Requirement Not Met Color'];
 var maxObfuscationChars = parseInt(geowilMagicSchoolsParams['Max Obfuscation Characters']);
 var bDataWasLoaded = false;
-var bEnableAutoUnlock = (geowilMagicSchoolParams['Enable Apell Auto-Unlock']);
+var bEnableAutoUnlock = (geowilMagicSchoolsParams['Enable Apell Auto-Unlock']);
 var $magicSchoolsData = {};
 
 var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
@@ -1061,7 +1061,7 @@ Scene_MagicSchools.prototype.createInfoWindow = function() {
 	let x = 288 + 10;
 	let y = this._helpWindow.height + 10;
 	let w = Graphics.width - x;
-	let h = Graphics.height - y - 45;
+	let h = Graphics.height - y - 90;
 
 	this._schoolInfoWnd = new Window_SchoolInfo(x, y, w, h);
 	this._schoolInfoWnd.setHandler('ok', this.openSchoolCmd.bind(this));
@@ -1084,8 +1084,7 @@ Scene_MagicSchools.prototype.schoolGoBackToSpellSelect = function(){
 }
 
 Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
-	let y = this._schoolMainWnd.getHeight() +
-		this._schoolCostWnd.getHeight() + this._helpWindow.height + 67;
+	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 
 	this._schoolGoldWnd = new Window_Gold(x, y);
@@ -1097,7 +1096,7 @@ Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 	let w = 288;
-	let h = 125;
+	let h = 200;
 
 	this._schoolLimitsWnd = new Window_SchoolLimits(x, y, w, h);
 	this._schoolLimitsWnd.hide();
@@ -1105,10 +1104,10 @@ Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 }
 
 Scene_MagicSchools.prototype.createSchoolCostWindow = function(){
-	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height;
+	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 	let w = 288;
-	let h = 150;
+	let h = 200;
 
 	this._schoolCostWnd = new Window_SchoolCost(x, y, w, h);
 	this._schoolCostWnd.hide();
@@ -1119,7 +1118,7 @@ Scene_MagicSchools.prototype.createMainWindow = function() {
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 210;
+	let h = 205;
 	let w = 288;
 
 	this._schoolMainWnd = new Window_SchoolMain(x, y, w, h, this._schoolInfoWnd);
@@ -1176,7 +1175,7 @@ Scene_MagicSchools.prototype.createSchoolTypeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 165;
+	let h = 205;
 	let w = 288;
 
 	this._schoolSchTypeListWnd = new Window_SchoolTypeList(x, y, w, h);
@@ -1220,7 +1219,7 @@ Scene_MagicSchools.prototype.goBackToSchoolMain = function(){
 Scene_MagicSchools.prototype.createSchoolListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10;
-	let h = 180;
+	let h = 205;
 	let w = 288;
 
 	this._schoolSchListWnd = new Window_SchoolList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
@@ -1290,7 +1289,7 @@ Scene_MagicSchools.prototype.createSchoolTreeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 180;
+	let h = 205;
 	let w = 288;
 
 	this._schoolTreeListWnd = new Window_SchoolTreeList(x, y, w, h, this._schoolInfoWnd, this._helpWindow);
@@ -1329,7 +1328,7 @@ Scene_MagicSchools.prototype.createSpellListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 180;
+	let h = 205;
 	let w = 288;
 
 	this._schoolSpellListWnd = new Window_SchoolSpellList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
@@ -1373,7 +1372,7 @@ Scene_MagicSchools.prototype.goBackToTreeList = function(){
 
 Scene_MagicSchools.prototype.createSchoolCmdWindow = function(){
 	let x = this._schoolCostWnd.getWidth() + 10;
-	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 10;
+	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 20;
 	let w = this._schoolInfoWnd.getWidth();
 	let h = 60;
 
@@ -3675,7 +3674,7 @@ Window_SchoolLimits.prototype.drawItem = function(index){
 	let x = rect.width/2;
 	let y = rect.y + (rect.height/2) - (this.lineHeight() * 0.65);
 	let w = rect.width - this.textPadding();
-	this.contents.fontSize = 20;
+	this.contents.fontSize = 25;
 
 	this.drawText(this._comList[index], rect.x, y, w , 'center');
 }
@@ -3697,8 +3696,8 @@ Window_SchoolLimits.prototype.buildComList = function(){
 		let finalPrimaries = maxPrimaries - currPrimaries;
 		let finalSecondaries = maxSecondaries - currSecondairies;
 
-		this._comList.push("Avail. Pri Slots: " + String(finalPrimaries));
-		this._comList.push("Avail. Sec Slots: " + String(finalSecondaries));
+		this._comList.push("Primary Slots: " + String(finalPrimaries));
+		this._comList.push("Secondary Slots: " + String(finalSecondaries));
 	}
 }
 
@@ -3770,27 +3769,7 @@ Window_SchoolCost.prototype.itemWidth = function() {
                    this.spacing()) / this.maxCols() - this.spacing());
 }
 
-Window_SchoolCost.prototype.resetPallete = function() {
-	this._selectedMode = 0;
-	this.refresh();
-}
-
-Window_SchoolCost.prototype.itemRect = function(index) {
-	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
-}
-
-Window_SchoolCost.prototype.drawItem = function(index){
-	let rect = this.itemRectForText(index);
-	let x = rect.width/2;
-	let y = rect.y + (rect.height/2) - (this.lineHeight() * 0.50);
-	let w = rect.width - this.textPadding();
-	this.contents.fontSize = 20;
+Window_SchoolCost.prototype.drawInfo = function(){
 	if (this._mode != -1) {
 		let actLevel = this._selectedActor._level;
 		let actClassId = this._selectedActor._classId;
@@ -3804,8 +3783,26 @@ Window_SchoolCost.prototype.drawItem = function(index){
 		let goldCost = 0;
 		let itemCost = 0;
 		let dataItm = undefined;
-		let currCommand = this._comList[index];
 		let bMeetsLevelReq = true;
+		let infoFormat = "%1%2";
+		let bEnableWordwrap = false;
+		let title = "Cost Requirements";
+		let wndInfo = "";
+		let gldCostInfo = "";
+		let itmCostInfo = "";
+		let reqLvlInfo = "";
+
+		let halfWndW = this._width / 2;
+		this.contents.fontSize = 26;
+
+		let titleLen = this.contents.measureTextWidth(title);
+		let titlePos = Math.floor(halfWndW - (titleLen/1.5));
+
+		titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
+		title = addXShift(title, titlePos);
+		title = changeFontSize(title, 26);
+		title = addBreak(title, 'end');
+
 		if (this._mode == 0) {
 			if (bEnableGoldCost){
 				goldCost = calculateSchoolGoldCost(
@@ -3814,90 +3811,123 @@ Window_SchoolCost.prototype.drawItem = function(index){
 					schoolSecdConfig,
 					schoolIds
 				);
+
+				if (goldCost > 0){
+					gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+					wndInfo += gldCostInfo;
+				}
 			}
 
 			if (bEnableItemCost){
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-				if (dataItm){
-					currPrtyItems = $gameParty.numItems(dataItm);
-				}
-
 				itemCost = calculateSchoolItemCost(
 					schoolType,
 					schoolPriConfig,
 					schoolSecdConfig,
 					schoolIds
 				);
+
+				costItemId = getSchoolCostItemId(this._selectedSchoolId);
+				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
+				if (itemCost > 0 && dataItm){
+					currPrtyItems = $gameParty.numItems(dataItm);
+					itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+
+					wndInfo += itmCostInfo;
+				}
 			}
 		} else if (this._mode == 1) {
 			let spellId = this._selectedSkillId;
 			let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
 			if (skillData) {
-				if (currCommand.includes("Level")) {
-					if (actLevel < skillData.ReqLevel) {
-						bMeetsLevelReq = false;
-					}
-				} else {
-					if (bEnableGoldCost){
-						goldCost = calculateSkillGoldCost(
-							schoolType,
-							schoolPriConfig,
-							schoolSecdConfig,
-							schoolIds,
-							skillData,
-							this._selectedSchoolId
-						);
-					}
+				reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", 0);
+				wndInfo += reqLvlInfo;
 
-					if (bEnableItemCost){
-						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
-						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-						if (dataItm){
-							currPrtyItems = $gameParty.numItems(dataItm);
-						}
+				if (actLevel < skillData.ReqLevel) {
+					bMeetsLevelReq = false;
+				}
 
-						itemCost = calculateSkillItemCost(
-							schoolType,
-							schoolPriConfig,
-							schoolSecdConfig,
-							schoolIds,
-							skillData,
-							this._selectedSchoolId
-						);
+				if (bEnableGoldCost){
+					goldCost = calculateSkillGoldCost(
+						schoolType,
+						schoolPriConfig,
+						schoolSecdConfig,
+						schoolIds,
+						skillData,
+						this._selectedSchoolId
+					);
+
+					if (goldCost > 0){
+						gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+						wndInfo += gldCostInfo;
+					}
+				}
+
+				if (bEnableItemCost){
+					itemCost = calculateSkillItemCost(
+						schoolType,
+						schoolPriConfig,
+						schoolSecdConfig,
+						schoolIds,
+						skillData,
+						this._selectedSchoolId
+					);
+
+					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
+					if (itemCost > 0 && dataItm){
+						currPrtyItems = $gameParty.numItems(dataItm);
+						itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+
+						wndInfo += itmCostInfo;
 					}
 				}
 			}
-
-			if (bMeetsLevelReq && this._comList[index].includes("Level")) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
 		}
 
-		if (bEnableGoldCost && this._comList[index].includes(TextManager.currencyUnit)) {
-			if (goldCost <= currPrtyGold) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
-		}
+		let totalText = "";
+		totalText = totalText.concat(title, wndInfo);
+		let text = infoFormat.format(title, wndInfo);
+		let textState = {};
 
-		if (bEnableItemCost && dataItm && this._comList[index].includes(dataItm.name)) {
-			if (itemCost <= currPrtyItems) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
-		}
+		if (totalText.length > 0){
+			textState = { index: 0 };
+			textState.originalText = text;
+			textState.text = this.convertEscapeCharacters(text);
+			this._allTextHeight = this.calcTextHeight(textState, true);
 
-		if (!dataItm || (dataItm && !this._comList[index].includes(dataItm.name))) {
-			this.drawText(this._comList[index], rect.x, y, w , 'center');
-		} else if (dataItm) {
-			this.drawTextEx(this._comList[index], rect.x, y)
+			this.createContents();
+			this.drawTextEx(text, 0, 0);
 		}
 	}
+}
+
+Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, itmName, itmIconIdx){
+	let reqString = "";
+	if (typ == "gold"){
+		reqString = TextManager.currencyUnit + ": " + String(cost);
+
+		if (currAmt < cost) {
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	} else if (typ == "item") {
+		reqString = "\\i[" + itmIconIdx + "]" + itmName + " x" + String(cost);
+
+		if (currAmt < cost){
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	} else if (typ == "level") {
+		reqString =  + "Level: " + String(cost);
+
+		if (currAmt < cost){
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	}
+
+	reqString = changeFontSize(reqString, 22);
+	reqString = addXShift(reqString, 5);
+	reqString = addBreak(reqString, 'end');
+
+	return reqString;
 }
 
 Window_SchoolCost.prototype.drawTextEx = function(text, x, y) {
@@ -3914,108 +3944,11 @@ Window_SchoolCost.prototype.drawTextEx = function(text, x, y) {
     }
 };
 
-Window_SchoolCost.prototype.buildComList = function(){
-	this._comList = [];
-	this._totalItems = 0
-
-	let actSchoolData = this._selectedActor._magicSchoolsData;
-
-	if (actSchoolData && Object.keys(actSchoolData).length > 0 && this._selectedSkillId != -1 &&
-		this._selectedSchoolId != 0) {
-		//Actor Data
-		let actLevel = this._selectedActor._level;
-		let actClassId = this._selectedActor._classId;
-		let spellId = this._selectedSkillId;
-		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
-		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-		let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
-		let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-		let currPrtyGold = $gameParty.gold();
-		let currPrtyItems = 0;
-		let goldCost = 0;
-		let itemCost = 0;
-		let dataItm = undefined;
-
-		if (this._mode == 0){
-			if (bEnableGoldCost){
-				goldCost = calculateSchoolGoldCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
-
-			if (bEnableItemCost){
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-				if (dataItm){
-					currPrtyItems = $gameParty.numItems(dataItm);
-				}
-
-				itemCost = calculateSchoolItemCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
-		} else if (this._mode == 1) {
-			let spellId = this._selectedSkillId;
-			let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-			if (skillData) {
-				this._comList.push("Required Level: " + String(skillData.ReqLevel));
-				if (bEnableGoldCost){
-					goldCost = calculateSkillGoldCost(
-						schoolType,
-						schoolPriConfig,
-						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
-					);
-				}
-
-				if (bEnableItemCost){
-					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
-					dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
-					if (dataItm){
-						currPrtyItems = $gameParty.numItems(dataItm);
-					}
-
-					itemCost = calculateSkillItemCost(
-						schoolType,
-						schoolPriConfig,
-						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
-					);
-				}
-			}
-		}
-
-		this._goldCost = goldCost;
-		this._itemCost = itemCost;
-		this._dataItm = (!dataItm ? {} : dataItm);
-
-		if (bEnableGoldCost) { this._comList.push("Required " + TextManager.currencyUnit + ": " + String(goldCost)); } //TODO: Currency icon
-		if (bEnableItemCost) {
-			if (dataItm){
-				let itemCostStr = String(itemCost) + "x " + "\\i[" + dataItm.iconIndex + "] " + dataItm.name + " required";
-				this._comList.push(itemCostStr);
-			}
-		}
-	}
-}
-
 Window_SchoolCost.prototype.refresh = function() {
 	this.contents.clear();
 	if (this._mode != -1 && this._selectedActor && this._selectedSchoolId != -1 &&
 			this._selectedTreeId != -1 && this._selectedSkillId != -1){
-		this.buildComList();
-		this.drawAllItems();
+		this.drawInfo();
 	}
 }
 
@@ -5024,11 +4957,11 @@ function resetFontSize(text){
 
 function changeTextColor(text, pos, startColor, endColor){
 	if (pos == "start"){
-		text = "\\c[" + startColor + "]" + text;
+		text = "\\hc[" + startColor + "]" + text;
 	} else if (pos == "end"){
-		text += "\\c[" + endColor + "]";
+		text += "\\hc[" + endColor + "]";
 	} else if (pos == "both"){
-		text = "\\c[" + startColor + "]" + text + "\\c[" + endColor + "]";
+		text = "\\hc[" + startColor + "]" + text + "\\hc[" + endColor + "]";
 	}
 
 	return text;
