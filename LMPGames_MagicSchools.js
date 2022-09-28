@@ -65,26 +65,8 @@
 * @default false
 *
 *
-* @param MainInfo Formatting
+* @param Info Formatting
 * @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1\n%2"
-*
-*
-* @param TreeView Formatting
-* @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1"
-*
-*
-* @param SpellView Formatting
-* @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1"
-*
-*
-* @param SpellInfo Formatting
-* @desc Formatting for spell data info display
 * @type note
 * @default "<WordWrap>\n%1\n%2\n%3\n%4\n%5\n%6"
 *
@@ -93,7 +75,7 @@
 * @desc Sets the color used when the player has cannot
 * use a catalyst when crafting
 * @type text
-* @default 8A0000
+* @default A80000
 *
 *
 * @param School 1
@@ -552,10 +534,7 @@ function Window_SchoolCommand() { this.initialize.apply(this, arguments); };
 var bEnableGoldCost = (lmpGamesMagicSchoolsParams['Enable Gold Cost System'] === "true");
 var bEnableItemCost = (lmpGamesMagicSchoolsParams['Enable Item Cost System'] === "true");
 var bEnableMagicCrafting = (lmpGamesMagicSchoolsParams['Enable Magic Crafting support'] === "true");
-var mainInfoFmtTxt = lmpGamesMagicSchoolsParams['MainInfo Formatting'];
-var treeViewFmtTxt = lmpGamesMagicSchoolsParams['TreeView Formatting'];
-var spellViewFmtTxt = lmpGamesMagicSchoolsParams['SpellView Formatting'];
-var spellInfoFmtTxt = lmpGamesMagicSchoolsParams['SpellInfo Formatting'];
+var mainInfoFmtTxt = lmpGamesMagicSchoolsParams['Info Formatting'];
 var bShowLearnedLabel = (lmpGamesMagicSchoolsParams['Enable Learned Label'] === "true")
 var defaultCostItmId = parseInt(lmpGamesMagicSchoolsParams['Default Cost Item Id']);
 var spellListDispMode = parseInt(lmpGamesMagicSchoolsParams['Spell Info Display Mode']);
@@ -3659,27 +3638,7 @@ Window_SchoolLimits.prototype.resetPallete = function(){
 	this.refresh();
 }
 
-Window_SchoolLimits.prototype.itemRect = function(index){
-	let rect = new Rectangle();
-	let maxCols = this.maxCols();
-	rect.width = this.itemWidth();
-	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.1));
-	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-	rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-	return rect;
-}
-
-Window_SchoolLimits.prototype.drawItem = function(index){
-	let rect = this.itemRectForText(index);
-	let x = rect.width/2;
-	let y = rect.y + (rect.height/2) - (this.lineHeight() * 0.65);
-	let w = rect.width - this.textPadding();
-	this.contents.fontSize = 25;
-
-	this.drawText(this._comList[index], rect.x, y, w , 'center');
-}
-
-Window_SchoolLimits.prototype.buildComList = function(){
+Window_SchoolLimits.prototype.buildInfo = function(){
 	this._comList = [];
 	this._totalItems = 0
 
@@ -3695,16 +3654,75 @@ Window_SchoolLimits.prototype.buildComList = function(){
 		let maxSecondaries = $dataClasses.find(cls => cls && cls.id == actClassId).MaxSecondarySchools;
 		let finalPrimaries = maxPrimaries - currPrimaries;
 		let finalSecondaries = maxSecondaries - currSecondairies;
+		let infoFormat = JSON.parse(mainInfoFmtTxt);
+		
+		if (infoFormat) {
+			let title = "Available School Slots";
+			let bEnableWordwrap = false;
+			let wndInfo = "";
+			let priSlotStr = "";
+			let secdSlotStr = "";
 
-		this._comList.push("Primary Slots: " + String(finalPrimaries));
-		this._comList.push("Secondary Slots: " + String(finalSecondaries));
+			let halfWndW = this._width / 2;
+			this.contents.fontSize = 26;
+
+			let titleLen = this.contents.measureTextWidth(title);
+			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
+
+			titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
+			title = addXShift(title, titlePos);
+			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
+
+			priSlotStr = "Primary Slots: " + String(finalPrimaries);
+			priSlotStr = addXShift(priSlotStr, 5);
+			priSlotStr = changeFontSize(priSlotStr, 22);
+			priSlotStr = addBreak(priSlotStr, 'end');
+
+			wndInfo += priSlotStr;
+
+			secdSlotStr = "Secondary Slots: " + String(finalSecondaries);
+			secdSlotStr = addXShift(secdSlotStr, 5);
+			secdSlotStr = changeFontSize(secdSlotStr, 22);
+			secdSlotStr = addBreak(secdSlotStr, 'end');
+
+			wndInfo += secdSlotStr;
+
+			let totalText = "";
+			totalText = totalText.concat(title, wndInfo, "", "", "", "");
+			let text = infoFormat.format(title, wndInfo, "", "", "", "");
+			let textState = {};
+
+			if (totalText.length > 0){
+				textState = { index: 0 };
+				textState.originalText = text;
+				textState.text = this.convertEscapeCharacters(text);
+				let convertedTextHeight = this.calcTextHeight(textState, true);
+				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
+
+				if (bEnableWordwrap) {
+					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
+					var multi2 =  6;
+					let multi3 = (txtLen >= 600 ? 4 : 10);
+					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
+
+					this._allTextHeight += this._allTextHeight * 0.25;
+					let numOfBreaks = text.match(/<br>/g).length;
+					this._allTextHeight += numOfBreaks * 15;
+				} else {
+					this._allTextHeight = 2;
+				}
+
+				this.createContents();
+				this.drawTextEx(text, 0, 0);
+			}
+		}
 	}
 }
 
 Window_SchoolLimits.prototype.refresh = function() {
 	this.contents.clear();
-	this.buildComList();
-	this.drawAllItems();
+	this.buildInfo();
 }
 
 
@@ -3784,76 +3802,34 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		let itemCost = 0;
 		let dataItm = undefined;
 		let bMeetsLevelReq = true;
-		let infoFormat = JSON.parse(spellInfoFmtTxt);
-		let bEnableWordwrap = false;
-		let title = "Cost Requirements";
-		let wndInfo = "";
-		let gldCostInfo = "";
-		let itmCostInfo = "";
-		let reqLvlInfo = "";
+		let infoFormat = JSON.parse(mainInfoFmtTxt);
+		
+		if (infoFormat) {
+			let bEnableWordwrap = false;
+			let title = "Cost Requirements";
+			let wndInfo = "";
+			let gldCostInfo = "";
+			let itmCostInfo = "";
+			let reqLvlInfo = "";
 
-		let halfWndW = this._width / 2;
-		this.contents.fontSize = 26;
+			let halfWndW = this._width / 2;
+			this.contents.fontSize = 26;
 
-		let titleLen = this.contents.measureTextWidth(title);
-		let titlePos = Math.floor(halfWndW - (titleLen/1.5));
+			let titleLen = this.contents.measureTextWidth(title);
+			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
 
-		titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
-		title = addXShift(title, titlePos);
-		title = changeFontSize(title, 26);
-		title = addBreak(title, 'end');
+			titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
+			title = addXShift(title, titlePos);
+			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
 
-		if (this._mode == 0) {
-			if (bEnableGoldCost){
-				goldCost = calculateSchoolGoldCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-
-				if (goldCost > 0){
-					gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
-					wndInfo += gldCostInfo;
-				}
-			}
-
-			if (bEnableItemCost){
-				itemCost = calculateSchoolItemCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-				if (itemCost > 0 && dataItm){
-					currPrtyItems = $gameParty.numItems(dataItm);
-					itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
-
-					wndInfo += itmCostInfo;
-				}
-			}
-		} else if (this._mode == 1) {
-			let spellId = this._selectedSkillId;
-			let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-			if (skillData) {
-				reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", 0);
-				wndInfo += reqLvlInfo;
-
-				if (actLevel < skillData.ReqLevel) {
-					bMeetsLevelReq = false;
-				}
-
+			if (this._mode == 0) {
 				if (bEnableGoldCost){
-					goldCost = calculateSkillGoldCost(
+					goldCost = calculateSchoolGoldCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
+						schoolIds
 					);
 
 					if (goldCost > 0){
@@ -3863,16 +3839,14 @@ Window_SchoolCost.prototype.drawInfo = function(){
 				}
 
 				if (bEnableItemCost){
-					itemCost = calculateSkillItemCost(
+					itemCost = calculateSchoolItemCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
+						schoolIds
 					);
 
-					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					costItemId = getSchoolCostItemId(this._selectedSchoolId);
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (itemCost > 0 && dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
@@ -3881,36 +3855,83 @@ Window_SchoolCost.prototype.drawInfo = function(){
 						wndInfo += itmCostInfo;
 					}
 				}
+			} else if (this._mode == 1) {
+				let spellId = this._selectedSkillId;
+				let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
+				if (skillData) {
+					reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", 0);
+					wndInfo += reqLvlInfo;
+
+					if (actLevel < skillData.ReqLevel) {
+						bMeetsLevelReq = false;
+					}
+
+					if (bEnableGoldCost){
+						goldCost = calculateSkillGoldCost(
+							schoolType,
+							schoolPriConfig,
+							schoolSecdConfig,
+							schoolIds,
+							skillData,
+							this._selectedSchoolId
+						);
+
+						if (goldCost > 0){
+							gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+							wndInfo += gldCostInfo;
+						}
+					}
+
+					if (bEnableItemCost){
+						itemCost = calculateSkillItemCost(
+							schoolType,
+							schoolPriConfig,
+							schoolSecdConfig,
+							schoolIds,
+							skillData,
+							this._selectedSchoolId
+						);
+
+						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
+						if (itemCost > 0 && dataItm){
+							currPrtyItems = $gameParty.numItems(dataItm);
+							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+
+							wndInfo += itmCostInfo;
+						}
+					}
+				}
 			}
-		}
 
-		let totalText = "";
-		totalText = totalText.concat(title, wndInfo, "", "", "", "");
-		let text = infoFormat.format(title, wndInfo, "", "", "", "");
-		let textState = {};
+			let totalText = "";
+			totalText = totalText.concat(title, wndInfo, "", "", "", "");
+			let text = infoFormat.format(title, wndInfo, "", "", "", "");
+			let textState = {};
 
-		if (totalText.length > 0){
-			textState = { index: 0 };
-			textState.originalText = text;
-			textState.text = this.convertEscapeCharacters(text);
-			let convertedTextHeight = this.calcTextHeight(textState, true);
-			this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
+			if (totalText.length > 0){
+				textState = { index: 0 };
+				textState.originalText = text;
+				textState.text = this.convertEscapeCharacters(text);
+				let convertedTextHeight = this.calcTextHeight(textState, true);
+				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
 
-			if (bEnableWordwrap) {
-				var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-				var multi2 =  6;
-				let multi3 = (txtLen >= 600 ? 4 : 10);
-				var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
+				if (bEnableWordwrap) {
+					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
+					var multi2 =  6;
+					let multi3 = (txtLen >= 600 ? 4 : 10);
+					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
 
-				this._allTextHeight += this._allTextHeight * 0.25;
-				let numOfBreaks = text.match(/<br>/g).length;
-				this._allTextHeight += numOfBreaks * 15;
-			} else {
-				this._allTextHeight = 2;
+					this._allTextHeight += this._allTextHeight * 0.25;
+					let numOfBreaks = text.match(/<br>/g).length;
+					this._allTextHeight += numOfBreaks * 15;
+				} else {
+					this._allTextHeight = 2;
+				}
+
+				this.createContents();
+				this.drawTextEx(text, 0, 0);
 			}
-
-			this.createContents();
-			this.drawTextEx(text, 0, 0);
 		}
 	}
 }
@@ -4071,7 +4092,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 	let totalText = "";
 	let treeNames = "School Spell Trees:<br>";
 
-	fmt = JSON.parse(treeViewFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSchoolId > 0){
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
@@ -4120,7 +4141,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 	let spellNames = "Tree Spells:";
 
 	spellNames = addBreak(spellNames, 'end');
-	fmt = JSON.parse(spellViewFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedTreeId > 0){
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
@@ -4234,7 +4255,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 	let textState = undefined;
 	let totalText = "";
 
-	fmt = JSON.parse(spellInfoFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSkillId > 0) {
 		let name = "";
 		let desc = "";
