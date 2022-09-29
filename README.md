@@ -126,11 +126,22 @@ For more information on how to set skills up when using the Magic Crafting plugi
 
 
 ## Plugin Settings
-	Optional if there are no plugin settings.
+### Magic Crafting Support
+** Description **
+When enabled, enables support for the Magic Crafting plugin which changes
+some of the functionality on this plugin.  Mainly, skills, when learned, do not unlock the next skill in a tree to be learned.  Instead, the skill is marked "Craftable" and must be crafted before it can be learned.
 
-	This section should be used to detail each plugin setting, its usage, valid values or at least expected values.
+This also depend on the Auto-Unlock setting.
 
-	If a setting is a mode setting, explain each mode's function and include visual aid where possible.
+** Type **
+Boolean (True/False)
+
+** Default **
+False
+
+
+
+
 
 ### Plugin Setting 1
 	Allows you to make each character in a text box a different color as defined in the list of color hex codes in this setting.
