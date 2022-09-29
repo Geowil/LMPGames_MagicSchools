@@ -61,18 +61,18 @@ Consider a Warlock class configured as a Grade 2 class and a skill tree configur
 
 <ul>
     <li>Primary:</li>
-        <ul>
-            <li>Grade 1: Fire 1</li>
-            <li>Grade 2: Fire 1, Fire 2</li>
-            <li>Grade 3: Fire 1, Fire 2, Fire 3</li>
-        </ul>
+    <ul>
+        <li>Grade 1: Fire 1</li>
+        <li>Grade 2: Fire 1, Fire 2</li>
+        <li>Grade 3: Fire 1, Fire 2, Fire 3</li>
+    </ul>
 
-        <li>Secondary:</li>
-        <ul>
-            <li>Grade 1: Fire 1</li>
-            <li>Grade 2: Fire 1</li>
-            <li>Grade 3: Fire 1, Fire 2</li>
-        </ul>
+    <li>Secondary:</li>
+    <ul>
+        <li>Grade 1: Fire 1</li>
+        <li>Grade 2: Fire 1</li>
+        <li>Grade 3: Fire 1, Fire 2</li>
+    </ul>
 </ul>
 
 
