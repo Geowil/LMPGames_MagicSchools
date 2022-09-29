@@ -170,7 +170,7 @@ If there any schools with a cost item id assigned, these will override the defau
 Boolean (True/False)
 
 **Default**<br>
-False
+False<br><br>
 
 
 ### Spell Info Display Mode
