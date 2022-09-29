@@ -24,7 +24,7 @@ There are some required third party plugins:
 <ul>
     <li>YEP_MessageCore - YanFly Message Core</li>
     <li>YEP_X_ExtMesPack1 - YanFly Message Core Extension Pack 1</li>
-</ul><br><br>
+</ul>
 
 Optional Plugins:
 <ul>
@@ -32,7 +32,7 @@ Optional Plugins:
     <ul>
         <li>This is required if you enable the Crafting Support plugin setting</li>
     </ul>
-</ul><br><br>
+</ul>
 
 
 ## How does it Work?
@@ -95,7 +95,7 @@ The Item and Gold Cost Systems are optional systems to impose extra requirements
 The Gold System is pretty simple, turn it and go.  If you need to modify the formulas or values, check the Plugin Settings section first for important about these and how they are used.
 
 The Item Cost System is a bit more complex.  In addition to the cost formulas and static values you must also set up the item(s) to used as the cost item.  There three settings for this:
-    <ul style="list-style: '- ';">
+    <ul>
         <li>The global cost item which applied to all schools and skills that don't have a cost item assigned</li>
         <li>The school cost item which will override the global cost item and apply to skills that do not have a cost item assigned.</li>
         <li>The skill cost item which wil override the school cost item if assigned in the note tag.</li>
