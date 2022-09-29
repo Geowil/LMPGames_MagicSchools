@@ -3657,7 +3657,7 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 		let infoFormat = JSON.parse(mainInfoFmtTxt);
 		
 		if (infoFormat) {
-			let title = "Available School Slots";
+			let title = "Available Slots";
 			let bEnableWordwrap = false;
 			let wndInfo = "";
 			let priSlotStr = "";
@@ -3669,21 +3669,21 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 			let titleLen = this.contents.measureTextWidth(title);
 			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
 
-			titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
+			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
 			title = addXShift(title, titlePos);
 			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
 			title = addBreak(title, 'end');
 
 			priSlotStr = "Primary Slots: " + String(finalPrimaries);
 			priSlotStr = addXShift(priSlotStr, 5);
-			priSlotStr = changeFontSize(priSlotStr, 22);
+			priSlotStr = changeFontSize(priSlotStr, 24);
 			priSlotStr = addBreak(priSlotStr, 'end');
 
 			wndInfo += priSlotStr;
 
 			secdSlotStr = "Secondary Slots: " + String(finalSecondaries);
 			secdSlotStr = addXShift(secdSlotStr, 5);
-			secdSlotStr = changeFontSize(secdSlotStr, 22);
 			secdSlotStr = addBreak(secdSlotStr, 'end');
 
 			wndInfo += secdSlotStr;
@@ -3813,14 +3813,15 @@ Window_SchoolCost.prototype.drawInfo = function(){
 			let reqLvlInfo = "";
 
 			let halfWndW = this._width / 2;
-			this.contents.fontSize = 26;
+			this.contents.fontSize = 25;
 
 			let titleLen = this.contents.measureTextWidth(title);
 			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
 
-			titlePos = Math.floor((title.length < 10 ? titlePos - (10 + (title.length/2)) : titlePos + (title.length/2)));
+			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
 			title = addXShift(title, titlePos);
 			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
 			title = addBreak(title, 'end');
 
 			if (this._mode == 0) {
@@ -3958,7 +3959,7 @@ Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt
 		}
 	}
 
-	reqString = changeFontSize(reqString, 22);
+	reqString = changeFontSize(reqString, 24);
 	reqString = addXShift(reqString, 5);
 	reqString = addBreak(reqString, 'end');
 
@@ -4055,8 +4056,8 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 			secondaryNames = secondaryNames.substr(0, secondaryNames.length - 2);
 		}
 
-		totalText = totalText.concat(primaryNames, secondaryNames);
-		text = fmt.format(primaryNames, secondaryNames);
+		totalText = totalText.concat(primaryNames, secondaryNames, "", "", "", "");
+		text = fmt.format(primaryNames, secondaryNames, "", "", "", "");
 
 		if (totalText.length > 0){
 			textState = { index: 0 };
@@ -4104,8 +4105,8 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		}
 
 
-		totalText = totalText.concat(treeNames);
-		text = fmt.format(treeNames);
+		totalText = totalText.concat(treeNames, "", "", "", "", "");
+		text = fmt.format(treeNames, "", "", "", "", "");
 
 		textState = { index: 0 };
 		textState.originalText = text;
@@ -4219,8 +4220,8 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 			}
 		}
 
-		totalText = totalText.concat(spellNames);
-		text = fmt.format(spellNames);
+		totalText = totalText.concat(spellNames, "", "", "", "", "");
+		text = fmt.format(spellNames, "", "", "", "", "", "");
 
 
 		textState = { index: 0 };
