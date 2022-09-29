@@ -140,11 +140,74 @@ Boolean (True/False)
 False
 
 
+### Enable Gold Cost System
+**Description**<br>
+When enabled, activates a cost system that calculates a currency cost to unlock shools and learn spells.
+
+Formulas that are used in these calculations can be found in the settings for each school.
+
+**Type**<br>
+Boolean (True/False)
+
+**Default**<br>
+False
 
 
+### Enable Item Cost System
+**Description**<br>
+When enabled, activates a cost system that calculates a cost in items to unlock schools and learn spells.
 
-### Plugin Setting 1
-	Allows you to make each character in a text box a different color as defined in the list of color hex codes in this setting.
+Formuals that are used in these calculations can be found in the settings for each school.
+
+When enabled, some plugin settings become required.  At the very least, the Default Cost Item Id setting is required, but there are also cost item id settings per school and these can also be set per skill.
+
+If there are any skills with a cost item id assigned, these will override the school setting or default settings.
+
+If there any schools with a cost item id assigned, these will override the default setting and be applied to spells within the trees of that school.
+
+
+**Type**<br>
+Boolean (True/False)
+
+**Default**<br>
+False
+
+
+### Spell Info Display Mode
+**Description**<br>
+This setting allows you to define how certain information will be displayed to the player.
+
+This setting affects the Spell Information displayed while picking a spell tree to learn from.
+
+There are three Modes:
+
+<ul>
+    <li>Mode 0</li>
+    <ul>
+        This mode is the default mode.  It shows spells that you are able to learn and hides those spells that have yet to be unlocked.
+    </ul>
+    <li>Mode 1</li>
+    <ul>
+        In this mode, all spells in a tree are shown, however if a spell is not learnable it will show up with a different text color than ones that can be or have learned.
+    </ul>
+    <li>Mode 2</li>
+    <ul>
+        I this mode, all spells in the tree are shown, however if a spell is not learnable it will show up obfuscated based on the obfuscation plugin setting values.
+    </ul>
+</ul>
+
+
+Insert Images
+
+
+**Type**<br>
+Number (0, 1, 2)
+
+**Default**<br>
+0
+
+
+### sss
 
 ## Plugin Commands - Optional
 	Optional if there are no plugin commands.
