@@ -23,6 +23,12 @@
 * @default false
 *
 *
+* @param Enable Name Aliasing
+* @desc When enabled, if an item or skill name is too long the shortened name set in the note tag will be used.
+* @type boolean
+* @default false
+*
+*
 * @param Spell Info Display Mode
 * @desc Sets how the spell list while selecting a tree is displayed.  See GitHub for more info.
 * @type number
@@ -543,6 +549,7 @@ var reqNotMetColor = lmpGamesMagicSchoolsParams['Requirement Not Met Color'];
 var maxObfuscationChars = parseInt(lmpGamesMagicSchoolsParams['Max Obfuscation Characters']);
 var bDataWasLoaded = false;
 var bEnableAutoUnlock = (lmpGamesMagicSchoolsParams['Enable Apell Auto-Unlock']);
+var bEnableNameAlias = (lmpGamesMagicSchoolsParams['Enable Name Aliasing'] === "true");
 var $magicSchoolsData = {};
 
 var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
@@ -584,6 +591,7 @@ DataManager.isDatabaseLoaded = function(){
 DataManager.loadMagicSchoolsNoteTags = function(){
 	$dataClasses = this.processMagicSchoolsNoteTags($dataClasses, "class");
 	$dataSkills = this.processMagicSchoolsNoteTags($dataSkills, "skill");
+	$dataItems = this.processMagicSchoolsNoteTags($dataItems, "item");
 	$dataActors = this.processActorData($dataActors);
 };
 
@@ -601,6 +609,8 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 				obj["CostItemId"] = 0;
 				obj["GoldCostMod"] = 0;
 				obj["ItemCostMod"] = 0;
+			} else if (typ == "item"){
+				obj["Alias"] = "";
 			}
 
 			if (obj.note != undefined && obj.note != ""){
@@ -611,10 +621,10 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 
 					for (let noteLine of noteData){
 						switch (noteLine){
-							case '<MagicSchools>':
+							case '<LMP_MagicSchools>':
 								bStartMagicSchoolsTag = true;
 								break;
-							case '</MagicSchools>':
+							case '</LMP_MagicSchools>':
 								bEndMagicSchoolsTag = true;
 								break;
 							default:
@@ -638,6 +648,8 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 										obj.GoldCostMod = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'ItemCostMod'){
 										obj.ItemCostMod = parseInt(noteLines[1]);
+									} else if (noteLines[0] == "Alias"){
+										obj.Alias = noteLines[1];
 									}
 								}
 
@@ -3219,6 +3231,7 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 	let x = rect.width/2;
 	let y = rect.y + (rect.height/2) - this.lineHeight() * 0.5;
 	let w = rect.width - this.textPadding();
+	let finalName = "";
 
 	if (this._selectedActor && this._comList[this._pageIndex][index] != "Cancel"){
 		let actLevel = this._selectedActor._level;
@@ -3285,9 +3298,11 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		} else {
 			this.changePaintOpacity(true);
 		}
+
+		finalName = getDisplayName(this._width, skillData, this.contents);
 	}
 
-	this.drawText(this._comList[this._pageIndex][index], rect.x, y, w , 'center');
+	this.drawText(finalName, rect.x, y, w , 'center');
 }
 
 Window_SchoolSpellList.prototype.buildComList = function(){
@@ -3673,7 +3688,6 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 			title = addXShift(title, titlePos);
 			title = changeFontSize(title, 26);
 			title = addBreak(title, 'end');
-			title = addBreak(title, 'end');
 
 			priSlotStr = "Primary Slots: " + String(finalPrimaries);
 			priSlotStr = addXShift(priSlotStr, 5);
@@ -3822,7 +3836,6 @@ Window_SchoolCost.prototype.drawInfo = function(){
 			title = addXShift(title, titlePos);
 			title = changeFontSize(title, 26);
 			title = addBreak(title, 'end');
-			title = addBreak(title, 'end');
 
 			if (this._mode == 0) {
 				if (bEnableGoldCost){
@@ -3851,7 +3864,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (itemCost > 0 && dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
-						itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+						itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm);
 
 						wndInfo += itmCostInfo;
 					}
@@ -3897,7 +3910,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 						if (itemCost > 0 && dataItm){
 							currPrtyItems = $gameParty.numItems(dataItm);
-							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm);
 
 							wndInfo += itmCostInfo;
 						}
@@ -3937,7 +3950,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 	}
 }
 
-Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, itmName, itmIconIdx){
+Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, itmData){
 	let reqString = "";
 	if (typ == "gold"){
 		reqString = TextManager.currencyUnit + ": " + String(cost);
@@ -3946,7 +3959,8 @@ Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt
 			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	} else if (typ == "item") {
-		reqString = "\\i[" + itmIconIdx + "]" + itmName + " x" + String(cost);
+		let finalName = getDisplayName(this._width, itmData, this.contents);
+		reqString = "\\i[" + itmData.iconIndex + "]" + finalName + " x" + String(cost);
 
 		if (currAmt < cost){
 			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
@@ -5142,3 +5156,14 @@ function getSchoolCost(baseCost, costMod, schoolMulti, numOfSchools, formula) { 
 function getSpellCost(baseCost, costMod, skLvl, formula) { return eval(formula); }
 function getSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData[selectedSchoolId].CostItemId : defaultCostItmId); }
 function getSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData[selectedSchoolId].CostItemId : defaultCostItmId)); }
+function getDisplayName(width, data, contents){
+	let finalName = "";
+	let textWidth = contents.measureTextWidth(data.name);
+	if (textWidth > width - 15 && bEnableNameAlias && data.Alias && data.Alias != ""){
+		finalName = data.Alias;
+	} else {
+		finalName = data.name;
+	}
+
+	return finalName;
+}
