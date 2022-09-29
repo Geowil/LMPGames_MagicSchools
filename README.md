@@ -21,12 +21,19 @@ More information about plugin settings can be found below.
 
 ## Requirements
 There are some required third party plugins:
-    YEP_MessageCore - YanFly Message Core
-    YEP_X_ExtMesPack1 - YanFly Message Core Extension Pack 1
+<ul>
+    <li>YEP_MessageCore - YanFly Message Core</li>
+    <li>YEP_X_ExtMesPack1 - YanFly Message Core Extension Pack 1</li>
+</ul><br><br>
 
 Optional Plugins:
-    LMPGames_MagicCrafting - LMPGames Magic Crafting
-        This is required if you enable the Crafting Support plugin setting
+<ul>
+    <li>LMPGames_MagicCrafting - LMPGames Magic Crafting</li>
+    <ul>
+        <li>This is required if you enable the Crafting Support plugin setting</li>
+    </ul>
+</ul><br><br>
+
 
 ## How does it Work?
 This plugin uses plugin setting objects to configure each school.  Each school has some specific settings that apply only to that school.  Other settings override global settings or are overridable by lower level settings.
