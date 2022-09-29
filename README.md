@@ -10,4 +10,6 @@ You configure elemental schools of magic, each one corresponding to the elements
 
 Each school also has configuration options for spell trees.  Spell trees are used to group like magic (IE: Fire, Fira, Firaga) and provide a natural look and feel towards spell progression which is missing from RPG Maker.
 
-There is a lot more to talk about, but for now this will do until the complete version of this documentation is completed.
+## Test Heading
+
+admalkmdkasd
