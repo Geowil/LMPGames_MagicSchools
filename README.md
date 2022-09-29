@@ -59,15 +59,22 @@ You can configre the Mage to be a Grade 1 class, the Warlock to be a Grade 2 cla
 
 Consider a Warlock class configured as a Grade 2 class and a skill tree configured like so:
 
-    Primary:
-        Grade 1: Fire 1
-        Grade 2: Fire 1, Fire 2
-        Grade 3: Fire 1, Fire 2, Fire 3
+    <ul>
+        <li>Primary:</li>
+        <ul>
+            <li>Grade 1: Fire 1</li>
+            <li>Grade 2: Fire 1, Fire 2</li>
+            <li>Grade 3: Fire 1, Fire 2, Fire 3</li>
+        </ul>
 
-    Secondary:
-        Grade 1: Fire 1
-        Grade 2: Fire 1
-        Grade 3: Fire 1, Fire 2
+        <li>Secondary:</li>
+        <ul>
+            <li>Grade 1: Fire 1</li>
+            <li>Grade 2: Fire 1</li>
+            <li>Grade 3: Fire 1, Fire 2</li>
+        </ul>
+    </ul>
+    
 
 If the character learns the Fire School as a primary school, they will be able to learn both Fire 1 and Fire 2.
 
