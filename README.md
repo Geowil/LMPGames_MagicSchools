@@ -127,16 +127,16 @@ For more information on how to set skills up when using the Magic Crafting plugi
 
 ## Plugin Settings
 ### Magic Crafting Support
-** Description **
+**Description**<br>
 When enabled, enables support for the Magic Crafting plugin which changes
 some of the functionality on this plugin.  Mainly, skills, when learned, do not unlock the next skill in a tree to be learned.  Instead, the skill is marked "Craftable" and must be crafted before it can be learned.
 
 This also depend on the Auto-Unlock setting.
 
-** Type **
+**Type**<br>
 Boolean (True/False)
 
-** Default **
+**Default**<br>
 False
 
 
