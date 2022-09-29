@@ -521,6 +521,10 @@
 
 var LMPGames = LMPGames || {};
 const lmpGamesMagicSchoolsParams = PluginManager.parameters('LMPGames_MagicSchools');
+var $magicSchoolsData = {
+	"schools" : {},
+	"skillData" : []
+};
 
 //Window/Scene defines
 function Scene_MagicSchools() { this.initialize.apply(this, arguments); };
@@ -550,7 +554,6 @@ var maxObfuscationChars = parseInt(lmpGamesMagicSchoolsParams['Max Obfuscation C
 var bDataWasLoaded = false;
 var bEnableAutoUnlock = (lmpGamesMagicSchoolsParams['Enable Apell Auto-Unlock']);
 var bEnableNameAlias = (lmpGamesMagicSchoolsParams['Enable Name Aliasing'] === "true");
-var $magicSchoolsData = {};
 
 var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
 var hitTypLst = ["Always Hits", "Normal", "Uses Mag Evasion"];
@@ -608,13 +611,14 @@ DataManager.loadMagicSchoolsNoteTags = function(){
 DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 	for(let obj of dataObj){
 		if (obj){
+			let tempMagSchoolSkillDataObj = {};
 			if (typ == "class"){
 				obj["UsesSchools"] = false;
 				obj["MaxPrimarySchools"] = 0;
 				obj["MaxSecondarySchools"] = 0;
 				obj["ClassGrade"] = 0;
 			} else if (typ == "skill"){
-				obj["CanLearn"] = false;
+				tempMagSchoolSkillDataObj["CanLearn"] = false;
 				obj["ReqLevel"] = 0;
 				obj["CostItemId"] = 0;
 				obj["GoldCostMod"] = 0;
@@ -649,7 +653,7 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 									} else if (noteLines[0] == "ClassGrade"){
 										obj.ClassGrade = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'CanLearn'){ //Skills'
-										obj.CanLearn = true;
+										tempMagSchoolSkillDataObj.CanLearn = true;
 									} else if (noteLines[0] == 'ReqLevel'){
 										obj.ReqLevel = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'CostItemId'){
@@ -674,6 +678,14 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 			}
 
 			dataObj[obj.id] = obj;
+			if (typ == "skill"){
+				tempMagSchoolSkillDataObj.id = obj.id;
+				$magicSchoolsData.skillData[obj.id] = tempMagSchoolSkillDataObj;
+			}
+		} else {
+			if (typ == "skill"){
+				$magicSchoolsData.skillData[0] = null;
+			}
 		}
 	}
 
@@ -845,7 +857,7 @@ DataManager.buildMagicSchoolsData = function(){
 			}
 
 			newSchool.Trees = newTrees;
-			$magicSchoolsData[i1] = newSchool;
+			$magicSchoolsData.schools[i1] = newSchool;
 		}
 
 		if (i1 == maxSchools){
@@ -867,13 +879,13 @@ Game_Interpreter.prototype.pluginCommand = function(command, args){
 		}
 
 		if (command.match(/LMP.MagicSchools[ ]Open/)){
-			matches = ((/LMP.Request[ ]Open/).exec(command) || []);
+			matches = ((/LMP.MagicSchools[ ]Open/).exec(command) || []);
 
 			if (matches){
 				SceneManager.push(Scene_MagicSchools);
 			}
 		}else if (command.match(/LMP.MagicSchools[ ]EnableLearning[ ](\d+)/)){
-			matches = ((/LMP.Request[ ](\d+)[ ](\w+)/).exec(command) || []);
+			matches = ((/LMP.MagicSchools[ ](\d+)[ ](\w+)/).exec(command) || []);
 			if (matches){
 				mschoolsUnlockSkill(matches[2]);
 			}
@@ -884,8 +896,12 @@ Game_Interpreter.prototype.pluginCommand = function(command, args){
 }
 
 function mschoolsUnlockSkill(skillId){
-	let skill = $dataSkills.find(sk => sk && sk.id == skillId);
-	skill.CanLearn = true;
+	let skill = $magicSchoolsData.skillData.find(sk => sk && sk.id == skillId);
+	if (skill){
+		skill.CanLearn = true;
+	} else {
+		$magicSchoolsData.skillData[skillId].CanLearn = true;
+	}
 }
 
 
@@ -1391,11 +1407,11 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 	this._selectedSchoolId = this._schoolSchListWnd.getSelectedSchoolId();
 	let schoolTypeObj = {};
 
-	schoolTypeObj = $magicSchoolsData[this._selectedSchoolId];
+	schoolTypeObj = $magicSchoolsData.schools[this._selectedSchoolId];
 	//schoolTypeObj = JSON.parse(JSON.stringify(schoolTypeObj));
 
 	if (cmdWndMode == 0){ //Selected new school
-		let globalTrees = $magicSchoolsData[this._selectedSchoolId].Trees;
+		let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
 		let schoolTrees = {};
 
 		for (let treeId of Object.keys(globalTrees)){
@@ -1467,7 +1483,7 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		let nextSpellId = 0;
 
 		if ($magicSchoolsData.hasOwnProperty(this._selectedSchoolId)){
-			let currSchool = $magicSchoolsData[this._selectedSchoolId];
+			let currSchool = $magicSchoolsData.schools[this._selectedSchoolId];
 			if (currSchool.Trees.hasOwnProperty(this._selectedTreeId)){
 				currTree = currSchool.Trees[this._selectedTreeId];
 			}
@@ -1479,14 +1495,20 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 					let skillData = $dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]);
 					if (skillData) {
 						if (bEnableMagicCrafting) {
-							if (!skillData.CanCraft && bEnableAutoUnlock) {
-								skillData.CanCraft = true;
+							let craftSkillData = $magicCraftingData.skillData.find(skl => skl && skl.id == skillData.id);
+							if (craftSkillData){
+								if (!craftSkillData.CanCraft && bEnableAutoUnlock) {
+									craftSkillData.CanCraft = true;
+								}
 							}
 
 							break;
 						} else {
-							if (!skillData.CanLearn && bEnableAutoUnlock) {
-								skillData.CanLearn = true;
+							let schoolSkillData = $magicSchoolsData.skillData.find(skl => skl && skl.id == skillData.id);
+							if (schoolSkillData){
+								if (!schoolSkillData.CanLearn && bEnableAutoUnlock) {
+									schoolSkillData.CanLearn = true;
+								}
 							}
 						}
 					}
@@ -1531,15 +1553,15 @@ Scene_MagicSchools.prototype.processCmdCancel = function(){
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let treeGradeConfig = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+			let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 			if (treeGradeConfig){
 				let treeSkills = treeGradeConfig.Config;
-				let learnableSkills = treeSkills.filter(skl => skl && skl.CanLearn);
+				let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
 				let playerSchoolTrees = this._selAct._magicSchoolsData[this._classId][gradeType][this._selectedSchoolId].Trees;
 				if (Object.keys(playerSchoolTrees).length > 0){
 					if (playerSchoolTrees.hasOwnProperty(this._selectedTreeId)){
 						let playerSkills = playerSchoolTrees[this._selectedTreeId].Spells;
-						unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(parseInt(skl)));
+						unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.id));
 					} else {
 						bypassCheck = true;
 					}
@@ -2353,8 +2375,8 @@ Window_SchoolList.prototype.drawItem = function(index){
 			let actClassId = this._selectedActor._classId;
 			let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 			let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-			let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-			let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
+			let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
+			let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 
 			if (bEnableGoldCost){
 				if (schoolType.includes("Primary")){
@@ -2444,14 +2466,14 @@ Window_SchoolList.prototype.buildComList = function(){
 		if (this._selectedMode == 0){ //Unlocking new school
 			if (actorSchoolData && Object.keys(actorSchoolData).length > 0){
 				let actorSchoolIds = [];
-				let dataSchoolIds = Object.keys($magicSchoolsData);
+				let dataSchoolIds = Object.keys($magicSchoolsData.schools);
 
 				actorSchoolIds = actorSchoolIds.concat(Object.keys(actorSchoolData.PrimarySchools));
 				actorSchoolIds = actorSchoolIds.concat(Object.keys(actorSchoolData.SecondarySchools));
 
 				if (dataSchoolIds.length > 0){
 					for (let i1 = 0; i1 < dataSchoolIds.length; i1++){
-						let currSchool = $magicSchoolsData[dataSchoolIds[i1]];
+						let currSchool = $magicSchoolsData.schools[dataSchoolIds[i1]];
 						let key = dataSchoolIds[i1];
 						if (!actorSchoolIds.includes(key)){
 							dataSchools.push(currSchool);
@@ -2646,8 +2668,8 @@ Window_SchoolList.prototype.processOk = function(){
 				let actClassId = this._selectedActor._classId;
 				let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 				let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-				let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-				let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
+				let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
+				let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 				if (bEnableGoldCost){
 					goldCost = calculateSchoolGoldCost(
 						schoolType,
@@ -2826,10 +2848,10 @@ Window_SchoolTreeList.prototype.drawItem = function(index){
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let treeGradeConfig = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+			let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 			if (treeGradeConfig){
 				let treeSkills = treeGradeConfig.Config;
-				let learnableSkills = $dataSkills.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+				let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
 				let playerSchoolType = actSchoolData[classId][gradeType];
 				if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 					let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -2895,13 +2917,13 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let globalTrees = $magicSchoolsData[this._selectedSchoolId].Trees;
+			let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
 
 			for (let treeId of Object.keys(globalTrees)){
-				let treeGradeConfig = $magicSchoolsData[this._selectedSchoolId].Trees[treeId][globalGradeType][gradeConfig];
+				let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[treeId][globalGradeType][gradeConfig];
 				if (treeGradeConfig){
 					let treeSkills = treeGradeConfig.Config;
-					let learnableSkills = $dataSkills.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+					let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
 					let playerSchoolType = actSchoolData[classId][gradeType];
 					if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 						let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -2927,7 +2949,7 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 					bypassCheck = true;
 				}
 
-				let tree = $magicSchoolsData[this._selectedSchoolId].Trees[treeId];
+				let tree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[treeId];
 				treeNames.push(tree.Name);
 				treeIds.push(treeId);
 
@@ -3106,10 +3128,10 @@ Window_SchoolTreeList.prototype.processOk = function(){
 				let bypassCheck = false;
 				if (clsGrade != 0){
 					let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-					let treeGradeConfig = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+					let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 					if (treeGradeConfig){
 						let treeSkills = treeGradeConfig.Config;
-						let learnableSkills = $dataSkills.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+						let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
 						let playerSchoolType = actSchoolData[classId][gradeType];
 						if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 							let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -3252,8 +3274,8 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		let spellId = this._skillIdList[this._pageIndex][index];
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-		let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
+		let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
+		let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 		let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
 		let currPrtyGold = $gameParty.gold();
 		let currPrtyItems = 0;
@@ -3315,6 +3337,9 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		finalName = getDisplayName(this._width, skillData, this.contents);
 	}
 
+	if (this._comList[this._pageIndex][index] == "Cancel"){
+		finalName = "Cancel";
+	}
 	this.drawText(finalName, rect.x, y, w , 'center');
 }
 
@@ -3348,7 +3373,7 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 
 		//Global Data
 		if (this._selectedTreeId > 0){
-			currGlblTree = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId];
+			currGlblTree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
 			treeConfigsGlbl = (this._selectedSchoolType == 0 ? currGlblTree.PrimaryGradeConfig : currGlblTree.SecondaryGradeConfig);
 			treeConfigKeys = Object.keys(treeConfigsGlbl);
 
@@ -3372,8 +3397,13 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 				finalSkillIds = glblSkills.filter(gSkId => glblSkills.includes(gSkId));
 			}
 
+			let msSkillIds = $magicSchoolsData.skillData.filter(sk => sk && finalSkillIds.contains(sk.id) && sk.CanLearn)
+				.reduce((lst, skl) =>{
+					lst.push(skl.id);
+					return lst;
+				}, []);
 
-			let finalSkills = $dataSkills.filter(sk => sk && finalSkillIds.contains(sk.id) && sk.CanLearn);
+			let finalSkills = $dataSkills.filter(sk => sk && msSkillIds.contains(sk.id));
 			finalSkillIds = [];
 
 			for (let i1 = 0; i1 < finalSkills.length; i1++){
@@ -3552,8 +3582,8 @@ Window_SchoolSpellList.prototype.processOk = function(){
 				let actClassId = this._selectedActor._classId;
 				let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 				let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-				let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-				let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
+				let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
+				let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 				let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
 
 				if (skillData) {
@@ -3821,8 +3851,8 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
 		let numSchoolsPresent = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]).length;
-		let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
+		let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
+		let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 		let currPrtyGold = $gameParty.gold();
 		let currPrtyItems = 0;
 		let goldCost = 0;
@@ -4136,7 +4166,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		let totalText = "";
 		let title = "School Spell Trees:";
 		let treeNames = "";
-		let globalTrees = $magicSchoolsData[this._selectedSchoolId].Trees;
+		let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
 
 		title = addXShift(title, 5);
 		title = addBreak(title, 'end');
@@ -4192,7 +4222,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 		spellNames = addBreak(spellNames, 'end');
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
-		let globalTree = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId];
+		let globalTree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
 		let actCls = $dataClasses.find(cls => cls && cls.id == this._selectedActor._classId);
 		let actClsGrade = actCls.ClassGrade;
 		let gradeConfigType = (this._selectedSchoolType == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
@@ -4208,13 +4238,20 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 			actorSkills = selectActorSchool.Trees[this._selectedTreeId].Spells;
 		}
 
+		let msSkillIds = $magicSchoolsData.skillData.filter(sk => sk && globalTreeConfig.contains(String(sk.id)) && sk.CanLearn)
+				.reduce((lst, skl) =>{
+					lst.push(skl.id);
+					return lst;
+				}, []);
+
 		if (spellListDispMode == 0){
-			learnableSkills = $dataSkills.filter(sk => sk && sk.CanLearn && globalTreeConfig.includes(String(sk.id)));
+			learnableSkills = $dataSkills.filter(sk => sk && msSkillIds.includes(sk.id));
 		} else if (spellListDispMode > 0){
 			if (bEnableMagicCrafting) {
-				learnableSkills = $dataSkills.filter(sk => sk && globalTreeConfig.includes(String(sk.id)) && ((sk.IsRecipe && sk.TimesCrafted == 0) || !sk.IsRecipe));
+				let craftSkillData = $magicCraftingData.skillData.filter(sk => sk && msSkillIds.includes(sk.id));
+				learnableSkills = $dataSkills.filter(sk => sk && (craftSkillData[sk.id] && ((craftSkillData[sk.id].IsRecipe && craftSkillData[sk.id].TimesCrafted == 0) || !craftSkillData[sk.id].IsRecipe)));
 			} else {
-				learnableSkills = $dataSkills.filter(sk => sk && globalTreeConfig.includes(String(sk.id)));
+				learnableSkills = $dataSkills.filter(sk => sk && msSkillIds.includes(String(sk.id)));
 			}
 		}
 
@@ -4241,7 +4278,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 				} else {
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
 
-					if (!skill.CanLearn) {
+					if (!$magicSchools.skillData[skill.id].CanLearn) {
 						spellName = changeTextColor(spellName, 'both', 8, 0);
 					}
 				}
@@ -4257,7 +4294,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ") - Learned";
 				} else {
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
-					if (!skill.CanLearn) {
+					if (!$magicSchools.skillData[skill.id].CanLearn) {
 						spellName = obfuscateText(text);
 						spellName = changeTextColor(spellName, 'both', 8, 0);
 					}
@@ -5281,8 +5318,8 @@ function calculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 
 function getSchoolCost(baseCost, costMod, schoolMulti, numOfSchools, formula) { return eval(formula); }
 function getSpellCost(baseCost, costMod, skLvl, formula) { return eval(formula); }
-function getSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData[selectedSchoolId].CostItemId : defaultCostItmId); }
-function getSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData[selectedSchoolId].CostItemId : defaultCostItmId)); }
+function getSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId); }
+function getSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId)); }
 function getDisplayName(width, data, contents){
 	let finalName = "";
 	let textWidth = contents.measureTextWidth(data.name);
