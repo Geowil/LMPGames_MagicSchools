@@ -1,6 +1,6 @@
 /*:
 * @plugindesc Enables magic schools system.  Replaces magic learning with a new system
-* @author Geowil
+* @author LMPGames
 *
 *
 * @param Enable Gold Cost System
@@ -13,6 +13,12 @@
 * @param Enable Item Cost System
 * @desc When enabled, makes learning schools and spells
 * require items as as well as skill level.
+* @type boolean
+* @default false
+*
+*
+* @param Enable Spell Auto-Unlock
+* @desc When enabled, will allow the next spell in the same tree to be unlocked automatically.  See gitHub for more info.
 * @type boolean
 * @default false
 *
@@ -59,26 +65,8 @@
 * @default false
 *
 *
-* @param MainInfo Formatting
+* @param Info Formatting
 * @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1\n%2"
-*
-*
-* @param TreeView Formatting
-* @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1"
-*
-*
-* @param SpellView Formatting
-* @desc Formatting for spell blueprint info display
-* @type note
-* @default "<WordWrap>\n%1"
-*
-*
-* @param SpellInfo Formatting
-* @desc Formatting for spell data info display
 * @type note
 * @default "<WordWrap>\n%1\n%2\n%3\n%4\n%5\n%6"
 *
@@ -87,7 +75,7 @@
 * @desc Sets the color used when the player has cannot
 * use a catalyst when crafting
 * @type text
-* @default #8A0000
+* @default A80000
 *
 *
 * @param School 1
@@ -525,8 +513,8 @@
 * @type Number[]
 */
 
-var Geowil = Geowil || {};
-const geowilMagicSchoolsParams = PluginManager.parameters('Geowil_MagicSchools');
+var LMPGames = LMPGames || {};
+const lmpGamesMagicSchoolsParams = PluginManager.parameters('LMPGames_MagicSchools');
 
 //Window/Scene defines
 function Scene_MagicSchools() { this.initialize.apply(this, arguments); };
@@ -543,20 +531,18 @@ function Window_SchoolCommand() { this.initialize.apply(this, arguments); };
 
 
 //Params
-var bEnableGoldCost = (geowilMagicSchoolsParams['Enable Gold Cost System'] === "true");
-var bEnableItemCost = (geowilMagicSchoolsParams['Enable Item Cost System'] === "true");
-var bEnableMagicCrafting = (geowilMagicSchoolsParams['Enable Magic Crafting support'] === "true");
-var mainInfoFmtTxt = geowilMagicSchoolsParams['MainInfo Formatting'];
-var treeViewFmtTxt = geowilMagicSchoolsParams['TreeView Formatting'];
-var spellViewFmtTxt = geowilMagicSchoolsParams['SpellView Formatting'];
-var spellInfoFmtTxt = geowilMagicSchoolsParams['SpellInfo Formatting'];
-var bShowLearnedLabel = (geowilMagicSchoolsParams['Enable Learned Label'] === "true")
-var defaultCostItmId = parseInt(geowilMagicSchoolsParams['Default Cost Item Id']);
-var spellListDispMode = parseInt(geowilMagicSchoolsParams['Spell Info Display Mode']);
-var obfuscationChar = geowilMagicSchoolsParams['Obfuscation Character'];
-var reqNotMetColor = geowilMagicSchoolsParams['Requirement Not Met Color'];
-var maxObfuscationChars = parseInt(geowilMagicSchoolsParams['Max Obfuscation Characters']);
+var bEnableGoldCost = (lmpGamesMagicSchoolsParams['Enable Gold Cost System'] === "true");
+var bEnableItemCost = (lmpGamesMagicSchoolsParams['Enable Item Cost System'] === "true");
+var bEnableMagicCrafting = (lmpGamesMagicSchoolsParams['Enable Magic Crafting support'] === "true");
+var mainInfoFmtTxt = lmpGamesMagicSchoolsParams['Info Formatting'];
+var bShowLearnedLabel = (lmpGamesMagicSchoolsParams['Enable Learned Label'] === "true")
+var defaultCostItmId = parseInt(lmpGamesMagicSchoolsParams['Default Cost Item Id']);
+var spellListDispMode = parseInt(lmpGamesMagicSchoolsParams['Spell Info Display Mode']);
+var obfuscationChar = lmpGamesMagicSchoolsParams['Obfuscation Character'];
+var reqNotMetColor = lmpGamesMagicSchoolsParams['Requirement Not Met Color'];
+var maxObfuscationChars = parseInt(lmpGamesMagicSchoolsParams['Max Obfuscation Characters']);
 var bDataWasLoaded = false;
+var bEnableAutoUnlock = (lmpGamesMagicSchoolsParams['Enable Apell Auto-Unlock']);
 var $magicSchoolsData = {};
 
 var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
@@ -572,25 +558,25 @@ var scopeLst = [
 ];
 
 /* DataManager Aliases and Functions */
-var geowilMagicSchoolsDataManagerMakeSaveContents = DataManager.makeSaveContents;
+var lmpGamesMagicSchools_DataManager_MakeSaveContents = DataManager.makeSaveContents;
 DataManager.makeSaveContents = function(){
-	var contents = geowilMagicSchoolsDataManagerMakeSaveContents.call(this);
+	var contents = lmpGamesMagicSchools_DataManager_MakeSaveContents.call(this);
 
 	contents.magicSchools = $magicSchoolsData;
 	return contents;
 }
 
-var geowilMagicSchoolsDataManagerExtractSaveContents = DataManager.extractSaveContents;
+var lmpGamesMagicSchools_DataManager_ExtractSaveContents = DataManager.extractSaveContents;
 DataManager.extractSaveContents = function(contents) {
-    geowilMagicSchoolsDataManagerExtractSaveContents.apply(this,arguments);
-    bDataWasLoaded = true;
+	lmpGamesMagicSchools_DataManager_ExtractSaveContents.apply(this,arguments);
+	bDataWasLoaded = true;
 	$magicSchoolsData = contents.magicSchools;
 };
 
 
-var geowilMagicSchoolsDataManagerIsDatabaseLoaded = DataManager.isDatabaseLoaded;
+var lmpGamesMagicSchools_DataManager_IsDatabaseLoaded = DataManager.isDatabaseLoaded;
 DataManager.isDatabaseLoaded = function(){
-	if (!geowilMagicSchoolsDataManagerIsDatabaseLoaded.call(this)) { return false;}
+	if (!lmpGamesMagicSchools_DataManager_IsDatabaseLoaded.call(this)) { return false;}
 	this.loadMagicSchoolsNoteTags();
 	return true;
 };
@@ -643,10 +629,10 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 									} else if (noteLines[0] == "ClassGrade"){
 										obj.ClassGrade = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'CanLearn'){ //Skills'
-                                        obj.CanLearn = true;
+										obj.CanLearn = true;
 									} else if (noteLines[0] == 'ReqLevel'){
-                                        obj.ReqLevel = parseInt(noteLines[1]);
-                                    } else if (noteLines[0] == 'CostItemId'){
+										obj.ReqLevel = parseInt(noteLines[1]);
+									} else if (noteLines[0] == 'CostItemId'){
 										obj.CostItemId = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'GoldCostMod'){
 										obj.GoldCostMod = parseInt(noteLines[1]);
@@ -699,29 +685,29 @@ DataManager.processActorData = function($dataActors){
 }
 
 DataManager.createMagicSchoolsData = function(){
-    if (!bDataWasLoaded){
-        this.buildMagicSchoolsData();
-    }
+	if (!bDataWasLoaded){
+		this.buildMagicSchoolsData();
+	}
 }
 
 DataManager.buildMagicSchoolsData = function(){
-    let bMagicSchoolDataCreated = false;
-    let i1 = 1;
-    let maxSchools = Object.keys(geowilMagicSchoolsParams).filter(key => key.contains("School") &&
+	let bMagicSchoolDataCreated = false;
+	let i1 = 1;
+	let maxSchools = Object.keys(lmpGamesMagicSchoolsParams).filter(key => key.contains("School") &&
 		!key.contains("Additional") && !key.contains("Initial") && !key.contains("Secondary")).length;
 
-    while (!bMagicSchoolDataCreated){
-        let currSchool = geowilMagicSchoolsParams['School ' + i1];
+	while (!bMagicSchoolDataCreated){
+		let currSchool = lmpGamesMagicSchoolsParams['School ' + i1];
 		let parsedSchool = JSON.parse(currSchool);
 
 		if (Object.keys(parsedSchool).length > 0){
-	        let newSchool = {
-	            "Name" : parsedSchool.Name,
-	            "Trees" : {},
+			let newSchool = {
+				"Name" : parsedSchool.Name,
+				"Trees" : {},
 				"PrimaryConfig" : {},
 				"SecondaryConfig" : {},
 				"CostItemId": parseInt(parsedSchool["Cost Item Id"])
-	        };
+			};
 
 			//Setup Pri/Sec Configs
 			let initPriSchSpellBaseCost = parseInt(parsedSchool["Initial Primary School Spell Base Cost"]);
@@ -792,86 +778,86 @@ DataManager.buildMagicSchoolsData = function(){
 			newSchool.SecondaryConfig.schSpellCurrForm = secdSchSpellCurrFormula;
 			newSchool.SecondaryConfig.schSpellItmForm = secdSchSpellItmFormula;
 
-	        let parsedTrees = JSON.parse(parsedSchool.Trees);
-	        let newTrees = {};
+			let parsedTrees = JSON.parse(parsedSchool.Trees);
+			let newTrees = {};
 
-	        for (let treeKey of Object.keys(parsedTrees)){
-	            let currTree = JSON.parse(parsedTrees[treeKey]);
+			for (let treeKey of Object.keys(parsedTrees)){
+				let currTree = JSON.parse(parsedTrees[treeKey]);
 				if (Object.keys(currTree).length > 0){
-		            let newTree = {
+					let newTree = {
 						"Id" : currTree.Id,
-		                "Name" : currTree.Name,
-		                "TreeConfig" : JSON.parse(currTree.TreeConfig),
-		                "PrimaryGradeConfig" : {},
-		                "SecondaryGradeConfig" : {}
-		            }
+						"Name" : currTree.Name,
+						"TreeConfig" : JSON.parse(currTree.TreeConfig),
+						"PrimaryGradeConfig" : {},
+						"SecondaryGradeConfig" : {}
+					}
 
-		            let parsedPriGradeConfig = JSON.parse(currTree.PrimaryGradeConfig);
-		            let parsedSecondaryGradeConfig = JSON.parse(currTree.SecondaryGradeConfig);
-		            let newPriGradeConfig = {};
-		            let newSecGradeConfig = {};
+					let parsedPriGradeConfig = JSON.parse(currTree.PrimaryGradeConfig);
+					let parsedSecondaryGradeConfig = JSON.parse(currTree.SecondaryGradeConfig);
+					let newPriGradeConfig = {};
+					let newSecGradeConfig = {};
 
-		            for (let gradeKey of Object.keys(parsedPriGradeConfig)){
-		                let currGradeConfig = JSON.parse(parsedPriGradeConfig[gradeKey]);
+					for (let gradeKey of Object.keys(parsedPriGradeConfig)){
+						let currGradeConfig = JSON.parse(parsedPriGradeConfig[gradeKey]);
 
-		                newPriGradeConfig[gradeKey] = {
-		                    "GradeId" : currGradeConfig.GradeId,
-		                    "Config" : JSON.parse(currGradeConfig.Config)
-		                };
+						newPriGradeConfig[gradeKey] = {
+							"GradeId" : currGradeConfig.GradeId,
+							"Config" : JSON.parse(currGradeConfig.Config)
+						};
 
-		            }
+					}
 
-		            for (let gradeKey of Object.keys(parsedSecondaryGradeConfig)){
-		                let currGradeConfig = JSON.parse(parsedSecondaryGradeConfig[gradeKey]);
+					for (let gradeKey of Object.keys(parsedSecondaryGradeConfig)){
+						let currGradeConfig = JSON.parse(parsedSecondaryGradeConfig[gradeKey]);
 
-		                newSecGradeConfig[gradeKey] = {
-		                    "GradeId" : currGradeConfig.GradeId,
-		                    "Config" : JSON.parse(currGradeConfig.Config)
-		                };
-		            }
+						newSecGradeConfig[gradeKey] = {
+							"GradeId" : currGradeConfig.GradeId,
+							"Config" : JSON.parse(currGradeConfig.Config)
+						};
+					}
 
-		            newTree.PrimaryGradeConfig = newPriGradeConfig;
-		            newTree.SecondaryGradeConfig = newSecGradeConfig;
-	            	newTrees[newTree.Id] = newTree;
+					newTree.PrimaryGradeConfig = newPriGradeConfig;
+					newTree.SecondaryGradeConfig = newSecGradeConfig;
+					newTrees[newTree.Id] = newTree;
 				}
-	        }
+			}
 
-	        newSchool.Trees = newTrees;
-	        $magicSchoolsData[i1] = newSchool;
+			newSchool.Trees = newTrees;
+			$magicSchoolsData[i1] = newSchool;
 		}
 
-        if (i1 == maxSchools){
-            bMagicSchoolDataCreated = true;
-        } else {
-            i1++;
-        }
-    }
+		if (i1 == maxSchools){
+			bMagicSchoolDataCreated = true;
+		} else {
+			i1++;
+		}
+	}
 }
 
 /* Game_Interpreter Functions and Aliases */
-var geowilMagicSchoolsGameInterpreterPluginCommand = Game_Interpreter.prototype.pluginCommand;
+var lmpGamesMagicSchools_GameInterpreter_PluginCommand = Game_Interpreter.prototype.pluginCommand;
 Game_Interpreter.prototype.pluginCommand = function(command, args){
 	var matches = [];
 
-	if (command === 'Geowil.MagicSchools'){
+	if (command === 'LMP.MagicSchools'){
 		for (var i1 = 0; i1 < args.length; i1++){
 			command += " " + args[i1];
 		}
 
-		if (command.match(/Geowil.MagicSchools[ ]Open/)){
-			matches = ((/Geowil.Request[ ]Open/).exec(command) || []);
+		if (command.match(/LMP.MagicSchools[ ]Open/)){
+			matches = ((/LMP.Request[ ]Open/).exec(command) || []);
 
 			if (matches){
 				SceneManager.push(Scene_MagicSchools);
 			}
-		}else if (command.match(/Geowil.MagicSchools[ ]EnableLearning[ ](\d+)/)){
-			matches = ((/Geowil.Request[ ](\d+)[ ](\w+)/).exec(command) || []);
+		}else if (command.match(/LMP.MagicSchools[ ]EnableLearning[ ](\d+)/)){
+			matches = ((/LMP.Request[ ](\d+)[ ](\w+)/).exec(command) || []);
 			if (matches){
 				mschoolsUnlockSkill(matches[2]);
 			}
 		}
 	} else {
-		geowilMagicSchoolsGameInterpreterPluginCommand.call(this, command, args);
+		lmpGamesMagicSchools_GameInterpreter_PluginCommand.call(this, command, args);
 	}
 }
 
@@ -882,15 +868,15 @@ function mschoolsUnlockSkill(skillId){
 
 
 /* Game_Actor Functions */
-var geowilMagicSchoolsGameActorInitMembers = Game_Actor.prototype.initMembers;
+var lmpGamesMagicSchools_GameActor_InitMembers = Game_Actor.prototype.initMembers;
 Game_Actor.prototype.initMembers = function(){
-	geowilMagicSchoolsGameActorInitMembers.call(this);
+	lmpGamesMagicSchools_GameActor_InitMembers.call(this);
 	this._magicSchoolsData = {};
 }
 
-var geowilMagicSchoolsGameActorSetup = Game_Actor.prototype.setup;
+var lmpGamesMagicSchools_GameActor_Setup = Game_Actor.prototype.setup;
 Game_Actor.prototype.setup = function(actorId){
-	geowilMagicSchoolsGameActorSetup.call(this, actorId);
+	lmpGamesMagicSchools_GameActor_Setup.call(this, actorId);
 	let actorData = $dataActors[actorId];
 
 	if (actorData._magicSchoolsData && Object.keys(actorData._magicSchoolsData).length > 0){
@@ -898,9 +884,9 @@ Game_Actor.prototype.setup = function(actorId){
 	}
 }
 
-var geowilMagicSchoolsGameActorChangeClass = Game_Actor.prototype.changeClass;
+var lmpGamesMagicSchools_GameActor_ChangeClass = Game_Actor.prototype.changeClass;
 Game_Actor.prototype.changeClass = function(classId, keepExp){
-	geowilMagicSchoolsGameActorChangeClass.call(this, classId, keepExp);
+	lmpGamesMagicSchools_GameActor_ChangeClass.call(this, classId, keepExp);
 
 	let currClass = $dataClasses.find(cls => cls && cls.id == this._classId);
 	if (currClass.UsesSchools){
@@ -1051,7 +1037,7 @@ Scene_MagicSchools.prototype.schoolCharSelected = function(){
 
 Scene_MagicSchools.prototype.exitSchoolScene = function() { SceneManager.pop(); }
 Scene_MagicSchools.prototype.createInfoWindow = function() {
-	let x = 240 + 10;
+	let x = 288 + 10;
 	let y = this._helpWindow.height + 10;
 	let w = Graphics.width - x;
 	let h = Graphics.height - y - 90;
@@ -1077,8 +1063,7 @@ Scene_MagicSchools.prototype.schoolGoBackToSpellSelect = function(){
 }
 
 Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
-	let y = this._schoolMainWnd.getHeight() +
-		this._schoolCostWnd.getHeight() + this._helpWindow.height + 20;
+	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 
 	this._schoolGoldWnd = new Window_Gold(x, y);
@@ -1089,8 +1074,8 @@ Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
 Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
-	let w = 240;
-	let h = 90;
+	let w = 288;
+	let h = 200;
 
 	this._schoolLimitsWnd = new Window_SchoolLimits(x, y, w, h);
 	this._schoolLimitsWnd.hide();
@@ -1098,10 +1083,10 @@ Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 }
 
 Scene_MagicSchools.prototype.createSchoolCostWindow = function(){
-	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height;
+	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
-	let w = 240;
-	let h = 120;
+	let w = 288;
+	let h = 200;
 
 	this._schoolCostWnd = new Window_SchoolCost(x, y, w, h);
 	this._schoolCostWnd.hide();
@@ -1112,8 +1097,8 @@ Scene_MagicSchools.prototype.createMainWindow = function() {
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 210;
-	let w = 240;
+	let h = 205;
+	let w = 288;
 
 	this._schoolMainWnd = new Window_SchoolMain(x, y, w, h, this._schoolInfoWnd);
 	this._schoolMainWnd.setHandler('ok', this.mainMenuOptionSelected.bind(this));
@@ -1169,8 +1154,8 @@ Scene_MagicSchools.prototype.createSchoolTypeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 165;
-	let w = 240;
+	let h = 205;
+	let w = 288;
 
 	this._schoolSchTypeListWnd = new Window_SchoolTypeList(x, y, w, h);
 	this._schoolSchTypeListWnd.setHandler('ok', this.schoolTypeSelected.bind(this));
@@ -1213,8 +1198,8 @@ Scene_MagicSchools.prototype.goBackToSchoolMain = function(){
 Scene_MagicSchools.prototype.createSchoolListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10;
-	let h = 180;
-	let w = 240;
+	let h = 205;
+	let w = 288;
 
 	this._schoolSchListWnd = new Window_SchoolList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
 	this._schoolSchListWnd.setHandler('ok', this.schoolListSchSelected.bind(this));
@@ -1283,8 +1268,8 @@ Scene_MagicSchools.prototype.createSchoolTreeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 180;
-	let w = 240;
+	let h = 205;
+	let w = 288;
 
 	this._schoolTreeListWnd = new Window_SchoolTreeList(x, y, w, h, this._schoolInfoWnd, this._helpWindow);
 	this._schoolTreeListWnd.setHandler('ok', this.schoolTreeSelected.bind(this));
@@ -1322,8 +1307,8 @@ Scene_MagicSchools.prototype.createSpellListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 180;
-	let w = 240;
+	let h = 205;
+	let w = 288;
 
 	this._schoolSpellListWnd = new Window_SchoolSpellList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
 	this._schoolSpellListWnd.setHandler('ok', this.schoolSpellSelected.bind(this));
@@ -1366,7 +1351,7 @@ Scene_MagicSchools.prototype.goBackToTreeList = function(){
 
 Scene_MagicSchools.prototype.createSchoolCmdWindow = function(){
 	let x = this._schoolCostWnd.getWidth() + 10;
-	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 10;
+	let y = this._schoolInfoWnd.getHeight() + this._helpWindow.height + 20;
 	let w = this._schoolInfoWnd.getWidth();
 	let h = 60;
 
@@ -1464,18 +1449,21 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 			}
 		}
 
-		if (Object.keys(currTree).length > 0){
-			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++){
-				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1){
-					if (bEnableMagicCrafting) {
-						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft){						
-							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanCraft = true;
-						}
+		if (Object.keys(currTree).length > 0) {
+			for (let i1 = 0; i1 < currTree.TreeConfig.length; i1++) {
+				if (this._selectedSkillId == currTree.TreeConfig[i1] && i1 < currTree.TreeConfig.length - 1) {
+					let skillData = $dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]);
+					if (skillData) {
+						if (bEnableMagicCrafting) {
+							if (!skillData.CanCraft && bEnableAutoUnlock) {
+								skillData.CanCraft = true;
+							}
 
-						break;
-					} else {
-						if (!$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn){
-							$dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]).CanLearn = true;
+							break;
+						} else {
+							if (!skillData.CanLearn && bEnableAutoUnlock) {
+								skillData.CanLearn = true;
+							}
 						}
 					}
 				}
@@ -1557,22 +1545,22 @@ Scene_MagicSchools.prototype.processCmdCancel = function(){
 
 /* Window_SchoolCharSelect Functions */
 function Window_SchoolCharSelect() {
-    this.initialize.apply(this, arguments);
+	this.initialize.apply(this, arguments);
 }
 
 Window_SchoolCharSelect.prototype = Object.create(Window_Selectable.prototype);
 Window_SchoolCharSelect.prototype.constructor = Window_SchoolCharSelect;
 
 Window_SchoolCharSelect.prototype.initialize = function(x, y, hlpWndH) {
-    var width = this.getWidth();
-    this._h2 = hlpWndH + 10;
-    var height = this.getHeight();
+	var width = this.getWidth();
+	this._h2 = hlpWndH + 10;
+	var height = this.getHeight();
 	this._pendingIndex = -1;
 	this._selectableActors = [];
 	this.getSelectableActors();
 
-    Window_Selectable.prototype.initialize.call(this, x, y, width, height);
-    this.refresh();
+	Window_Selectable.prototype.initialize.call(this, x, y, width, height);
+	this.refresh();
 }
 
 Window_SchoolCharSelect.prototype.getSelectableActors = function(){
@@ -1584,85 +1572,85 @@ Window_SchoolCharSelect.prototype.getSelectableActors = function(){
 }
 
 Window_SchoolCharSelect.prototype.getWidth = function() {
-    return 360;
+	return 360;
 }
 
 
 Window_SchoolCharSelect.prototype.getSelectedActor = function() { return this._selectedActorId; }
 
 Window_SchoolCharSelect.prototype.getHeight = function() {
-    return Graphics.boxHeight - this._h2;
+	return Graphics.boxHeight - this._h2;
 }
 
 Window_SchoolCharSelect.prototype.maxItems = function() {
-    return this._selectableActors.length;
+	return this._selectableActors.length;
 }
 
 Window_SchoolCharSelect.prototype.itemHeight = function() {
-    var clientHeight = this.height - this.padding * 2 - 82;
-    return Math.floor(clientHeight / this.numVisibleRows());
+	var clientHeight = this.height - this.padding * 2 - 82;
+	return Math.floor(clientHeight / this.numVisibleRows());
 }
 
 Window_SchoolCharSelect.prototype.numVisibleRows = function() {
-    return 4;
+	return 4;
 }
 
 Window_SchoolCharSelect.prototype.loadImages = function() {
-    $gameParty.members().forEach(function(actor) {
+	$gameParty.members().forEach(function(actor) {
 		if ($dataActors[actor._actorId].UsesSchools){
-        	ImageManager.reserveFace(actor.faceName());
+			ImageManager.reserveFace(actor.faceName());
 		}
-    }, this);
+	}, this);
 }
 
 Window_SchoolCharSelect.prototype.drawItem = function(index) {
-    this.drawItemBackground(index);
-    this.drawItemImage(index);
-    this.drawItemStatus(index);
+	this.drawItemBackground(index);
+	this.drawItemImage(index);
+	this.drawItemStatus(index);
 }
 
 Window_SchoolCharSelect.prototype.drawItemBackground = function(index) {
-    if (index === this._pendingIndex) {
-        var rect = this.itemRect(index);
-        var color = this.pendingColor();
-        this.changePaintOpacity(false);
-        this.contents.fillRect(rect.x, rect.y, rect.width, rect.height, color);
-        this.changePaintOpacity(true);
-    }
+	if (index === this._pendingIndex) {
+		var rect = this.itemRect(index);
+		var color = this.pendingColor();
+		this.changePaintOpacity(false);
+		this.contents.fillRect(rect.x, rect.y, rect.width, rect.height, color);
+		this.changePaintOpacity(true);
+	}
 }
 
 Window_SchoolCharSelect.prototype.drawActorSimpleStatus = function(actor, x, y, width) {
-    var lineHeight = this.lineHeight();
-    var x2 = x + 180;
-    var width2 = Math.min(200, width - 180 - this.textPadding());
-    this.drawActorName(actor, x, y);
-    this.drawActorLevel(actor, x, y + lineHeight * 1);
+	var lineHeight = this.lineHeight();
+	var x2 = x + 180;
+	var width2 = Math.min(200, width - 180 - this.textPadding());
+	this.drawActorName(actor, x, y);
+	this.drawActorLevel(actor, x, y + lineHeight * 1);
 };
 
 Window_SchoolCharSelect.prototype.drawItemImage = function(index) {
-    var actor = $gameActors.actor(this._selectableActors[index]);
-    var rect = this.itemRect(index);
-    this.changePaintOpacity(actor.isBattleMember());
-    this.drawActorFace(actor, rect.x + 1, rect.y + 1, Math.ceil(Window_Base._faceWidth), Math.ceil(Window_Base._faceHeight));
-    this.changePaintOpacity(true);
+	var actor = $gameActors.actor(this._selectableActors[index]);
+	var rect = this.itemRect(index);
+	this.changePaintOpacity(actor.isBattleMember());
+	this.drawActorFace(actor, rect.x + 1, rect.y + 1, Math.ceil(Window_Base._faceWidth), Math.ceil(Window_Base._faceHeight));
+	this.changePaintOpacity(true);
 }
 
 Window_SchoolCharSelect.prototype.drawActorFace = function(actor, x, y, width, height) {
 	const faceBitmap = ImageManager.loadFace(actor.faceName());
-    // If we do not have the bitmap ready to draw, then try again after 25 ms
-    if (faceBitmap.width <= 0) {
-      return setTimeout(this.drawActorFace.bind(this, actor, x, y, width, height), 25);
-    }
-    this.drawFace(faceBitmap, actor.faceIndex(), x, y, width, height);
+	// If we do not have the bitmap ready to draw, then try again after 25 ms
+	if (faceBitmap.width <= 0) {
+	return setTimeout(this.drawActorFace.bind(this, actor, x, y, width, height), 25);
+	}
+	this.drawFace(faceBitmap, actor.faceIndex(), x, y, width, height);
 };
 
 Window_SchoolCharSelect.prototype.drawItemStatus = function(index) {
-    var actor = $gameActors.actor(this._selectableActors[index]);
-    var rect = this.itemRect(index);
-    var x = rect.x + 162;
-    var y = rect.y + rect.height / 2 - this.lineHeight() * 1.5;
-    var width = rect.width - x - this.textPadding();
-    this.drawActorSimpleStatus(actor, x, y, width);
+	var actor = $gameActors.actor(this._selectableActors[index]);
+	var rect = this.itemRect(index);
+	var x = rect.x + 162;
+	var y = rect.y + rect.height / 2 - this.lineHeight() * 1.5;
+	var width = rect.width - x - this.textPadding();
+	this.drawActorSimpleStatus(actor, x, y, width);
 }
 
 Window_SchoolCharSelect.prototype.drawFace = function(faceBitmap, faceIndex, x, y, width, height) {
@@ -1681,22 +1669,22 @@ Window_SchoolCharSelect.prototype.drawFace = function(faceBitmap, faceIndex, x, 
 };
 
 Window_SchoolCharSelect.prototype.processOk = function() {
-    Window_Selectable.prototype.processOk.call(this);
+	Window_Selectable.prototype.processOk.call(this);
 }
 
 Window_SchoolCharSelect.prototype.selectLast = function() {
-    this.select($gameParty.menuActor().index() || 0);
+	this.select($gameParty.menuActor().index() || 0);
 }
 
 Window_SchoolCharSelect.prototype.pendingIndex = function() {
-    return this._pendingIndex;
+	return this._pendingIndex;
 }
 
 Window_SchoolCharSelect.prototype.setPendingIndex = function(index) {
-    var lastPendingIndex = this._pendingIndex;
-    this._pendingIndex = index;
-    this.redrawItem(this._pendingIndex);
-    this.redrawItem(lastPendingIndex);
+	var lastPendingIndex = this._pendingIndex;
+	this._pendingIndex = index;
+	this.redrawItem(this._pendingIndex);
+	this.redrawItem(lastPendingIndex);
 }
 
 Window_SchoolCharSelect.prototype.processOk = function(){
@@ -1755,20 +1743,20 @@ Window_SchoolMain.prototype.itemHeight = function() {
 }
 
 Window_SchoolMain.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolMain.prototype.getCurrentComponent = function() { return this._currentCmp; }
 Window_SchoolMain.prototype.getCurrentCatalyst = function() { return this._currentCat; }
 Window_SchoolMain.prototype.itemRect = function(index){
 	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
+	let maxCols = this.maxCols();
+	rect.width = this.itemWidth();
+	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
+	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+	rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
+	return rect;
 }
 
 Window_SchoolMain.prototype.numVisibleRows = function() {
@@ -1818,10 +1806,10 @@ Window_SchoolMain.prototype.drawItem = function(index){
 		}
 	} else {
 		if (selectedCommand.contains("Secondary")){
-		   this.changePaintOpacity(false);
-	   } else if (selectedCommand.contains("Spells")){
-		   this.changePaintOpacity(false);
-	   }
+		this.changePaintOpacity(false);
+	} else if (selectedCommand.contains("Spells")){
+		this.changePaintOpacity(false);
+	}
 	}
 
 	this.drawText(this._comList[this._pageIndex][index], rect.x, y, w , 'center');
@@ -1848,10 +1836,10 @@ Window_SchoolMain.prototype.buildComList = function(){
 
 Window_SchoolMain.prototype.processCursorMove = function() {
 	let bResetSelect = false;
-    if (this.isCursorMovable()) {
-        var lastIndex = this.index();
+	if (this.isCursorMovable()) {
+		var lastIndex = this.index();
 
-        if (Input.isRepeated('down')) {
+		if (Input.isRepeated('down')) {
 			if (this._totalIndex + 1 > this._totalItems){
 				this._totalIndex = 0;
 			}
@@ -1859,12 +1847,12 @@ Window_SchoolMain.prototype.processCursorMove = function() {
 			this._totalIndex++;
 
 			bResetSelect = this.setIndexPage();
-            this.cursorDown(Input.isTriggered('down'));
+			this.cursorDown(Input.isTriggered('down'));
 			if (bResetSelect){
 				this.resetSelect("down");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('up')) {
+		} else if (Input.isRepeated('up')) {
 			if (this._totalIndex - 1 < 1){
 				this._totalIndex = this._totalItems;
 			} else {
@@ -1872,26 +1860,26 @@ Window_SchoolMain.prototype.processCursorMove = function() {
 			}
 
 			bResetSelect = this.setIndexPage();
-            this.cursorUp(Input.isTriggered('up'));
+			this.cursorUp(Input.isTriggered('up'));
 
 			if (bResetSelect){
 				this.resetSelect("up");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('right')) {
-            this.cursorRight(Input.isTriggered('right'));
-        } else if (Input.isRepeated('left')) {
-            this.cursorLeft(Input.isTriggered('left'));
-        } else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
-            this.cursorPagedown();
-        } else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
-            this.cursorPageup();
-        }
+		} else if (Input.isRepeated('right')) {
+			this.cursorRight(Input.isTriggered('right'));
+		} else if (Input.isRepeated('left')) {
+			this.cursorLeft(Input.isTriggered('left'));
+		} else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
+			this.cursorPagedown();
+		} else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
+			this.cursorPageup();
+		}
 
-        if (this.index() !== lastIndex) {
-            SoundManager.playCursor();
-        }
-    }
+		if (this.index() !== lastIndex) {
+			SoundManager.playCursor();
+		}
+	}
 };
 
 Window_SchoolMain.prototype.setIndexPage = function(lastIndex, direction){
@@ -1936,9 +1924,9 @@ Window_SchoolMain.prototype.select = function(index){
 	this._index = index;
 	if (this._comList.length > 0 && this._comList[this._pageIndex].length > 0){
 		this._stayCount = 0;
-	    this.ensureCursorVisible();
-	    this.updateCursor();
-	    this.callUpdateHelp();
+		this.ensureCursorVisible();
+		this.updateCursor();
+		this.callUpdateHelp();
 	}
 }
 
@@ -1980,10 +1968,10 @@ Window_SchoolMain.prototype.processOk = function(){
 					this._selectedMode = 1;
 					Window_Selectable.prototype.processOk.apply(this);
 				} else if (selectedCommand.contains("Secondary")){
-				   SoundManager.playCancel();
-			   } else if (selectedCommand.contains("Spells")){
-				   SoundManager.playCancel();
-			   }
+				SoundManager.playCancel();
+			} else if (selectedCommand.contains("Spells")){
+				SoundManager.playCancel();
+			}
 			}
 		} else{
 			Window_Selectable.prototype.processCancel.apply(this);
@@ -2043,20 +2031,20 @@ Window_SchoolTypeList.prototype.itemHeight = function() {
 }
 
 Window_SchoolTypeList.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolTypeList.prototype.getCurrentComponent = function() { return this._currentCmp; }
 Window_SchoolTypeList.prototype.getCurrentCatalyst = function() { return this._currentCat; }
 Window_SchoolTypeList.prototype.itemRect = function(index){
 	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
+	let maxCols = this.maxCols();
+	rect.width = this.itemWidth();
+	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
+	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+	rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
+	return rect;
 }
 
 Window_SchoolTypeList.prototype.setCurrentCompId = function(cmpId) { this._selectedComponents[this._currentCmp] = cmpId; }
@@ -2112,10 +2100,10 @@ Window_SchoolTypeList.prototype.buildComList = function(){
 
 Window_SchoolTypeList.prototype.processCursorMove = function() {
 	let bResetSelect = false;
-    if (this.isCursorMovable()) {
-        var lastIndex = this.index();
+	if (this.isCursorMovable()) {
+		var lastIndex = this.index();
 
-        if (Input.isRepeated('down')) {
+		if (Input.isRepeated('down')) {
 			if (this._totalIndex + 1 > this._totalItems){
 				this._totalIndex = 0;
 			}
@@ -2123,12 +2111,12 @@ Window_SchoolTypeList.prototype.processCursorMove = function() {
 			this._totalIndex++;
 
 			bResetSelect = this.setIndexPage();
-            this.cursorDown(Input.isTriggered('down'));
+			this.cursorDown(Input.isTriggered('down'));
 			if (bResetSelect){
 				this.resetSelect("down");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('up')) {
+		} else if (Input.isRepeated('up')) {
 			if (this._totalIndex - 1 < 1){
 				this._totalIndex = this._totalItems;
 			} else {
@@ -2136,26 +2124,26 @@ Window_SchoolTypeList.prototype.processCursorMove = function() {
 			}
 
 			bResetSelect = this.setIndexPage();
-            this.cursorUp(Input.isTriggered('up'));
+			this.cursorUp(Input.isTriggered('up'));
 
 			if (bResetSelect){
 				this.resetSelect("up");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('right')) {
-            this.cursorRight(Input.isTriggered('right'));
-        } else if (Input.isRepeated('left')) {
-            this.cursorLeft(Input.isTriggered('left'));
-        } else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
-            this.cursorPagedown();
-        } else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
-            this.cursorPageup();
-        }
+		} else if (Input.isRepeated('right')) {
+			this.cursorRight(Input.isTriggered('right'));
+		} else if (Input.isRepeated('left')) {
+			this.cursorLeft(Input.isTriggered('left'));
+		} else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
+			this.cursorPagedown();
+		} else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
+			this.cursorPageup();
+		}
 
-        if (this.index() !== lastIndex) {
-            SoundManager.playCursor();
-        }
-    }
+		if (this.index() !== lastIndex) {
+			SoundManager.playCursor();
+		}
+	}
 };
 
 Window_SchoolTypeList.prototype.setIndexPage = function(lastIndex, direction){
@@ -2195,9 +2183,9 @@ Window_SchoolTypeList.prototype.select = function(index){
 	this._index = index;
 	if (this._comList.length > 0 && this._comList[this._pageIndex].length > 0){
 		this._stayCount = 0;
-	    this.ensureCursorVisible();
-	    this.updateCursor();
-	    this.callUpdateHelp();
+		this.ensureCursorVisible();
+		this.updateCursor();
+		this.callUpdateHelp();
 	}
 }
 
@@ -2292,20 +2280,20 @@ Window_SchoolList.prototype.itemHeight = function() {
 }
 
 Window_SchoolList.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolList.prototype.getCurrentComponent = function() { return this._currentCmp; }
 Window_SchoolList.prototype.getCurrentCatalyst = function() { return this._currentCat; }
 Window_SchoolList.prototype.itemRect = function(index){
 	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
+	let maxCols = this.maxCols();
+	rect.width = this.itemWidth();
+	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
+	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+	rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
+	return rect;
 }
 
 Window_SchoolList.prototype.numVisibleRows = function() {
@@ -2345,7 +2333,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 
 			if (bEnableGoldCost){
 				if (schoolType.includes("Primary")){
-					 //Additional Pri School
+					//Additional Pri School
 					if (schoolIds.length > 0){
 						goldCost = getSchoolCost(
 							schoolPriConfig.addtSchBase,
@@ -2374,7 +2362,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 				}
 
 				if (schoolType.includes("Primary")){
-					 //Additional Pri School
+					//Additional Pri School
 					if (schoolIds.length > 0){
 						itemCost = getSchoolCost(
 							schoolPriConfig.addtSchItmBase,
@@ -2511,10 +2499,10 @@ Window_SchoolList.prototype.buildComList = function(){
 
 Window_SchoolList.prototype.processCursorMove = function() {
 	let bResetSelect = false;
-    if (this.isCursorMovable()) {
-        var lastIndex = this.index();
+	if (this.isCursorMovable()) {
+		var lastIndex = this.index();
 
-        if (Input.isRepeated('down')) {
+		if (Input.isRepeated('down')) {
 			if (this._totalIndex + 1 > this._totalItems){
 				this._totalIndex = 0;
 			}
@@ -2522,12 +2510,12 @@ Window_SchoolList.prototype.processCursorMove = function() {
 			this._totalIndex++;
 
 			bResetSelect = this.setIndexPage();
-            this.cursorDown(Input.isTriggered('down'));
+			this.cursorDown(Input.isTriggered('down'));
 			if (bResetSelect){
 				this.resetSelect("down");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('up')) {
+		} else if (Input.isRepeated('up')) {
 			if (this._totalIndex - 1 < 1){
 				this._totalIndex = this._totalItems;
 			} else {
@@ -2535,26 +2523,26 @@ Window_SchoolList.prototype.processCursorMove = function() {
 			}
 
 			bResetSelect = this.setIndexPage();
-            this.cursorUp(Input.isTriggered('up'));
+			this.cursorUp(Input.isTriggered('up'));
 
 			if (bResetSelect){
 				this.resetSelect("up");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('right')) {
-            this.cursorRight(Input.isTriggered('right'));
-        } else if (Input.isRepeated('left')) {
-            this.cursorLeft(Input.isTriggered('left'));
-        } else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
-            this.cursorPagedown();
-        } else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
-            this.cursorPageup();
-        }
+		} else if (Input.isRepeated('right')) {
+			this.cursorRight(Input.isTriggered('right'));
+		} else if (Input.isRepeated('left')) {
+			this.cursorLeft(Input.isTriggered('left'));
+		} else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
+			this.cursorPagedown();
+		} else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
+			this.cursorPageup();
+		}
 
-        if (this.index() !== lastIndex) {
-            SoundManager.playCursor();
-        }
-    }
+		if (this.index() !== lastIndex) {
+			SoundManager.playCursor();
+		}
+	}
 };
 
 Window_SchoolList.prototype.setIndexPage = function(lastIndex, direction){
@@ -2610,9 +2598,9 @@ Window_SchoolList.prototype.select = function(index){
 		}
 
 		this._stayCount = 0;
-	    this.ensureCursorVisible();
-	    this.updateCursor();
-	    this.callUpdateHelp();
+		this.ensureCursorVisible();
+		this.updateCursor();
+		this.callUpdateHelp();
 	}
 }
 
@@ -2742,9 +2730,9 @@ Window_SchoolTreeList.prototype.setHelpWindow = function(helpWnd){
 }
 
 Window_SchoolTreeList.prototype.callUpdateHelp = function() {
-    if (this.active && this._helpWindow) {
-        this.updateHelp();
-    }
+	if (this.active && this._helpWindow) {
+		this.updateHelp();
+	}
 }
 
 Window_SchoolTreeList.prototype.updateHelp = function(){
@@ -2767,20 +2755,20 @@ Window_SchoolTreeList.prototype.itemHeight = function() {
 }
 
 Window_SchoolTreeList.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolTreeList.prototype.getCurrentComponent = function() { return this._currentCmp; }
 Window_SchoolTreeList.prototype.getCurrentCatalyst = function() { return this._currentCat; }
 Window_SchoolTreeList.prototype.itemRect = function(index){
 	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.25));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
+	let maxCols = this.maxCols();
+	rect.width = this.itemWidth();
+	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.25));
+	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+	rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
+	return rect;
 }
 
 Window_SchoolTreeList.prototype.numVisibleRows = function() {
@@ -2980,10 +2968,10 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 
 Window_SchoolTreeList.prototype.processCursorMove = function() {
 	let bResetSelect = false;
-    if (this.isCursorMovable()) {
-        var lastIndex = this.index();
+	if (this.isCursorMovable()) {
+		var lastIndex = this.index();
 
-        if (Input.isRepeated('down')) {
+		if (Input.isRepeated('down')) {
 			if (this._totalIndex + 1 > this._totalItems){
 				this._totalIndex = 0;
 			}
@@ -2991,12 +2979,12 @@ Window_SchoolTreeList.prototype.processCursorMove = function() {
 			this._totalIndex++;
 
 			bResetSelect = this.setIndexPage();
-            this.cursorDown(Input.isTriggered('down'));
+			this.cursorDown(Input.isTriggered('down'));
 			if (bResetSelect){
 				this.resetSelect("down");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('up')) {
+		} else if (Input.isRepeated('up')) {
 			if (this._totalIndex - 1 < 1){
 				this._totalIndex = this._totalItems;
 			} else {
@@ -3004,26 +2992,26 @@ Window_SchoolTreeList.prototype.processCursorMove = function() {
 			}
 
 			bResetSelect = this.setIndexPage();
-            this.cursorUp(Input.isTriggered('up'));
+			this.cursorUp(Input.isTriggered('up'));
 
 			if (bResetSelect){
 				this.resetSelect("up");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('right')) {
-            this.cursorRight(Input.isTriggered('right'));
-        } else if (Input.isRepeated('left')) {
-            this.cursorLeft(Input.isTriggered('left'));
-        } else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
-            this.cursorPagedown();
-        } else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
-            this.cursorPageup();
-        }
+		} else if (Input.isRepeated('right')) {
+			this.cursorRight(Input.isTriggered('right'));
+		} else if (Input.isRepeated('left')) {
+			this.cursorLeft(Input.isTriggered('left'));
+		} else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
+			this.cursorPagedown();
+		} else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
+			this.cursorPageup();
+		}
 
-        if (this.index() !== lastIndex) {
-            SoundManager.playCursor();
-        }
-    }
+		if (this.index() !== lastIndex) {
+			SoundManager.playCursor();
+		}
+	}
 };
 
 Window_SchoolTreeList.prototype.setIndexPage = function(lastIndex, direction){
@@ -3072,9 +3060,9 @@ Window_SchoolTreeList.prototype.select = function(index){
 		}
 
 		this._stayCount = 0;
-	    this.ensureCursorVisible();
-	    this.updateCursor();
-	    this.callUpdateHelp();
+		this.ensureCursorVisible();
+		this.updateCursor();
+		this.callUpdateHelp();
 	}
 }
 
@@ -3203,18 +3191,18 @@ Window_SchoolSpellList.prototype.itemHeight = function() {
 }
 
 Window_SchoolSpellList.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolSpellList.prototype.itemRect = function(index){
 	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.1));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height;
-    return rect;
+	let maxCols = this.maxCols();
+	rect.width = this.itemWidth();
+	rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.1));
+	rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+	rect.y = Math.floor(index / maxCols) * rect.height;
+	return rect;
 }
 
 Window_SchoolSpellList.prototype.numVisibleRows = function() {
@@ -3415,10 +3403,10 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 
 Window_SchoolSpellList.prototype.processCursorMove = function() {
 	let bResetSelect = false;
-    if (this.isCursorMovable()) {
-        var lastIndex = this.index();
+	if (this.isCursorMovable()) {
+		var lastIndex = this.index();
 
-        if (Input.isRepeated('down')) {
+		if (Input.isRepeated('down')) {
 			if (this._totalIndex + 1 > this._totalItems){
 				this._totalIndex = 0;
 			}
@@ -3426,12 +3414,12 @@ Window_SchoolSpellList.prototype.processCursorMove = function() {
 			this._totalIndex++;
 
 			bResetSelect = this.setIndexPage();
-            this.cursorDown(Input.isTriggered('down'));
+			this.cursorDown(Input.isTriggered('down'));
 			if (bResetSelect){
 				this.resetSelect("down");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('up')) {
+		} else if (Input.isRepeated('up')) {
 			if (this._totalIndex - 1 < 1){
 				this._totalIndex = this._totalItems;
 			} else {
@@ -3439,26 +3427,26 @@ Window_SchoolSpellList.prototype.processCursorMove = function() {
 			}
 
 			bResetSelect = this.setIndexPage();
-            this.cursorUp(Input.isTriggered('up'));
+			this.cursorUp(Input.isTriggered('up'));
 
 			if (bResetSelect){
 				this.resetSelect("up");
 				bResetSelect = false;
 			}
-        } else if (Input.isRepeated('right')) {
-            this.cursorRight(Input.isTriggered('right'));
-        } else if (Input.isRepeated('left')) {
-            this.cursorLeft(Input.isTriggered('left'));
-        } else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
-            this.cursorPagedown();
-        } else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
-            this.cursorPageup();
-        }
+		} else if (Input.isRepeated('right')) {
+			this.cursorRight(Input.isTriggered('right'));
+		} else if (Input.isRepeated('left')) {
+			this.cursorLeft(Input.isTriggered('left'));
+		} else if (!this.isHandled('pagedown') && Input.isTriggered('pagedown')) {
+			this.cursorPagedown();
+		} else if (!this.isHandled('pageup') && Input.isTriggered('pageup')) {
+			this.cursorPageup();
+		}
 
-        if (this.index() !== lastIndex) {
-            SoundManager.playCursor();
-        }
-    }
+		if (this.index() !== lastIndex) {
+			SoundManager.playCursor();
+		}
+	}
 };
 
 Window_SchoolSpellList.prototype.setIndexPage = function(lastIndex, direction){
@@ -3514,9 +3502,9 @@ Window_SchoolSpellList.prototype.select = function(index){
 		}
 
 		this._stayCount = 0;
-	    this.ensureCursorVisible();
-	    this.updateCursor();
-	    this.callUpdateHelp();
+		this.ensureCursorVisible();
+		this.updateCursor();
+		this.callUpdateHelp();
 	}
 }
 
@@ -3641,8 +3629,8 @@ Window_SchoolLimits.prototype.itemHeight = function() {
 }
 
 Window_SchoolLimits.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
 Window_SchoolLimits.prototype.resetPallete = function(){
@@ -3650,27 +3638,7 @@ Window_SchoolLimits.prototype.resetPallete = function(){
 	this.refresh();
 }
 
-Window_SchoolLimits.prototype.itemRect = function(index){
-	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.1));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
-}
-
-Window_SchoolLimits.prototype.drawItem = function(index){
-	let rect = this.itemRectForText(index);
-	let x = rect.width/2;
-	let y = rect.y + (rect.height/2) - (this.lineHeight() * 0.65);
-	let w = rect.width - this.textPadding();
-	this.contents.fontSize = 20;
-
-	this.drawText(this._comList[index], rect.x, y, w , 'center');
-}
-
-Window_SchoolLimits.prototype.buildComList = function(){
+Window_SchoolLimits.prototype.buildInfo = function(){
 	this._comList = [];
 	this._totalItems = 0
 
@@ -3686,16 +3654,75 @@ Window_SchoolLimits.prototype.buildComList = function(){
 		let maxSecondaries = $dataClasses.find(cls => cls && cls.id == actClassId).MaxSecondarySchools;
 		let finalPrimaries = maxPrimaries - currPrimaries;
 		let finalSecondaries = maxSecondaries - currSecondairies;
+		let infoFormat = JSON.parse(mainInfoFmtTxt);
+		
+		if (infoFormat) {
+			let title = "Available Slots";
+			let bEnableWordwrap = false;
+			let wndInfo = "";
+			let priSlotStr = "";
+			let secdSlotStr = "";
 
-		this._comList.push("Avail. Pri Slots: " + String(finalPrimaries));
-		this._comList.push("Avail. Sec Slots: " + String(finalSecondaries));
+			let halfWndW = this._width / 2;
+			this.contents.fontSize = 26;
+
+			let titleLen = this.contents.measureTextWidth(title);
+			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
+
+			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
+			title = addXShift(title, titlePos);
+			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
+			title = addBreak(title, 'end');
+
+			priSlotStr = "Primary Slots: " + String(finalPrimaries);
+			priSlotStr = addXShift(priSlotStr, 5);
+			priSlotStr = changeFontSize(priSlotStr, 24);
+			priSlotStr = addBreak(priSlotStr, 'end');
+
+			wndInfo += priSlotStr;
+
+			secdSlotStr = "Secondary Slots: " + String(finalSecondaries);
+			secdSlotStr = addXShift(secdSlotStr, 5);
+			secdSlotStr = addBreak(secdSlotStr, 'end');
+
+			wndInfo += secdSlotStr;
+
+			let totalText = "";
+			totalText = totalText.concat(title, wndInfo, "", "", "", "");
+			let text = infoFormat.format(title, wndInfo, "", "", "", "");
+			let textState = {};
+
+			if (totalText.length > 0){
+				textState = { index: 0 };
+				textState.originalText = text;
+				textState.text = this.convertEscapeCharacters(text);
+				let convertedTextHeight = this.calcTextHeight(textState, true);
+				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
+
+				if (bEnableWordwrap) {
+					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
+					var multi2 =  6;
+					let multi3 = (txtLen >= 600 ? 4 : 10);
+					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
+
+					this._allTextHeight += this._allTextHeight * 0.25;
+					let numOfBreaks = text.match(/<br>/g).length;
+					this._allTextHeight += numOfBreaks * 15;
+				} else {
+					this._allTextHeight = 2;
+				}
+
+				this.createContents();
+				this.drawTextEx(text, 0, 0);
+			}
+		}
 	}
 }
 
 Window_SchoolLimits.prototype.refresh = function() {
 	this.contents.clear();
-	this.buildComList();
-	this.drawAllItems();
+	this.buildInfo();
 }
 
 
@@ -3756,31 +3783,11 @@ Window_SchoolCost.prototype.itemHeight = function() {
 }
 
 Window_SchoolCost.prototype.itemWidth = function() {
-    return Math.floor((this._width - this.padding * 2 +
-                   this.spacing()) / this.maxCols() - this.spacing());
+	return Math.floor((this._width - this.padding * 2 +
+				this.spacing()) / this.maxCols() - this.spacing());
 }
 
-Window_SchoolCost.prototype.resetPallete = function() {
-	this._selectedMode = 0;
-	this.refresh();
-}
-
-Window_SchoolCost.prototype.itemRect = function(index) {
-	let rect = new Rectangle();
-    let maxCols = this.maxCols();
-    rect.width = this.itemWidth();
-    rect.height = Math.floor(this.itemHeight() + (this.itemHeight() * 0.02));
-    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
-    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
-    return rect;
-}
-
-Window_SchoolCost.prototype.drawItem = function(index){
-	let rect = this.itemRectForText(index);
-	let x = rect.width/2;
-	let y = rect.y + (rect.height/2) - (this.lineHeight() * 0.50);
-	let w = rect.width - this.textPadding();
-	this.contents.fontSize = 20;
+Window_SchoolCost.prototype.drawInfo = function(){
 	if (this._mode != -1) {
 		let actLevel = this._selectedActor._level;
 		let actClassId = this._selectedActor._classId;
@@ -3794,41 +3801,72 @@ Window_SchoolCost.prototype.drawItem = function(index){
 		let goldCost = 0;
 		let itemCost = 0;
 		let dataItm = undefined;
-		let currCommand = this._comList[index];
 		let bMeetsLevelReq = true;
-		if (this._mode == 0) {
-			if (bEnableGoldCost){
-				goldCost = calculateSchoolGoldCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
+		let infoFormat = JSON.parse(mainInfoFmtTxt);
+		
+		if (infoFormat) {
+			let bEnableWordwrap = false;
+			let title = "Cost Requirements";
+			let wndInfo = "";
+			let gldCostInfo = "";
+			let itmCostInfo = "";
+			let reqLvlInfo = "";
 
-			if (bEnableItemCost){
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-				if (dataItm){
-					currPrtyItems = $gameParty.numItems(dataItm);
+			let halfWndW = this._width / 2;
+			this.contents.fontSize = 25;
+
+			let titleLen = this.contents.measureTextWidth(title);
+			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
+
+			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
+			title = addXShift(title, titlePos);
+			title = changeFontSize(title, 26);
+			title = addBreak(title, 'end');
+			title = addBreak(title, 'end');
+
+			if (this._mode == 0) {
+				if (bEnableGoldCost){
+					goldCost = calculateSchoolGoldCost(
+						schoolType,
+						schoolPriConfig,
+						schoolSecdConfig,
+						schoolIds
+					);
+
+					if (goldCost > 0){
+						gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+						wndInfo += gldCostInfo;
+					}
 				}
 
-				itemCost = calculateSchoolItemCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
-		} else if (this._mode == 1) {
-			let spellId = this._selectedSkillId;
-			let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-			if (skillData) {
-				if (currCommand.includes("Level")) {
+				if (bEnableItemCost){
+					itemCost = calculateSchoolItemCost(
+						schoolType,
+						schoolPriConfig,
+						schoolSecdConfig,
+						schoolIds
+					);
+
+					costItemId = getSchoolCostItemId(this._selectedSchoolId);
+					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
+					if (itemCost > 0 && dataItm){
+						currPrtyItems = $gameParty.numItems(dataItm);
+						itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+
+						wndInfo += itmCostInfo;
+					}
+				}
+			} else if (this._mode == 1) {
+				let spellId = this._selectedSkillId;
+				let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
+				if (skillData) {
+					reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", 0);
+					wndInfo += reqLvlInfo;
+
 					if (actLevel < skillData.ReqLevel) {
 						bMeetsLevelReq = false;
 					}
-				} else {
+
 					if (bEnableGoldCost){
 						goldCost = calculateSkillGoldCost(
 							schoolType,
@@ -3838,15 +3876,14 @@ Window_SchoolCost.prototype.drawItem = function(index){
 							skillData,
 							this._selectedSchoolId
 						);
+
+						if (goldCost > 0){
+							gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+							wndInfo += gldCostInfo;
+						}
 					}
 
 					if (bEnableItemCost){
-						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
-						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-						if (dataItm){
-							currPrtyItems = $gameParty.numItems(dataItm);
-						}
-
 						itemCost = calculateSkillItemCost(
 							schoolType,
 							schoolPriConfig,
@@ -3855,157 +3892,99 @@ Window_SchoolCost.prototype.drawItem = function(index){
 							skillData,
 							this._selectedSchoolId
 						);
+
+						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
+						if (itemCost > 0 && dataItm){
+							currPrtyItems = $gameParty.numItems(dataItm);
+							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm.name, dataItm.iconIndex);
+
+							wndInfo += itmCostInfo;
+						}
 					}
 				}
 			}
 
-			if (bMeetsLevelReq && this._comList[index].includes("Level")) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
-		}
+			let totalText = "";
+			totalText = totalText.concat(title, wndInfo, "", "", "", "");
+			let text = infoFormat.format(title, wndInfo, "", "", "", "");
+			let textState = {};
 
-		if (bEnableGoldCost && this._comList[index].includes(TextManager.currencyUnit)) {
-			if (goldCost <= currPrtyGold) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
-		}
+			if (totalText.length > 0){
+				textState = { index: 0 };
+				textState.originalText = text;
+				textState.text = this.convertEscapeCharacters(text);
+				let convertedTextHeight = this.calcTextHeight(textState, true);
+				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
 
-		if (bEnableItemCost && dataItm && this._comList[index].includes(dataItm.name)) {
-			if (itemCost <= currPrtyItems) {
-				this.resetTextColor();
-			} else {
-				this.changeTextColor(reqNotMetColor);
-			}
-		}
+				if (bEnableWordwrap) {
+					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
+					var multi2 =  6;
+					let multi3 = (txtLen >= 600 ? 4 : 10);
+					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
 
-		if (!dataItm || (dataItm && !this._comList[index].includes(dataItm.name))) {
-			this.drawText(this._comList[index], rect.x, y, w , 'center');
-		} else if (dataItm) {
-			this.drawTextEx(this._comList[index], rect.x, y)
+					this._allTextHeight += this._allTextHeight * 0.25;
+					let numOfBreaks = text.match(/<br>/g).length;
+					this._allTextHeight += numOfBreaks * 15;
+				} else {
+					this._allTextHeight = 2;
+				}
+
+				this.createContents();
+				this.drawTextEx(text, 0, 0);
+			}
 		}
 	}
+}
+
+Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, itmName, itmIconIdx){
+	let reqString = "";
+	if (typ == "gold"){
+		reqString = TextManager.currencyUnit + ": " + String(cost);
+
+		if (currAmt < cost) {
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	} else if (typ == "item") {
+		reqString = "\\i[" + itmIconIdx + "]" + itmName + " x" + String(cost);
+
+		if (currAmt < cost){
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	} else if (typ == "level") {
+		reqString = "Level: " + String(cost);
+
+		if (currAmt < cost){
+			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+		}
+	}
+
+	reqString = changeFontSize(reqString, 24);
+	reqString = addXShift(reqString, 5);
+	reqString = addBreak(reqString, 'end');
+
+	return reqString;
 }
 
 Window_SchoolCost.prototype.drawTextEx = function(text, x, y) {
-    if (text) {
-        let textState = { index: 0, x: x, y: y, left: x };
-        textState.text = this.convertEscapeCharacters(text);
-        textState.height = this.calcTextHeight(textState, false);
-        while (textState.index < textState.text.length) {
-            this.processCharacter(textState);
-        }
-        return textState.x - x;
-    } else {
-        return 0;
-    }
-};
-
-Window_SchoolCost.prototype.buildComList = function(){
-	this._comList = [];
-	this._totalItems = 0
-
-	let actSchoolData = this._selectedActor._magicSchoolsData;
-
-	if (actSchoolData && Object.keys(actSchoolData).length > 0 && this._selectedSkillId != -1 &&
-		this._selectedSchoolId != 0) {
-		//Actor Data
-		let actLevel = this._selectedActor._level;
-		let actClassId = this._selectedActor._classId;
-		let spellId = this._selectedSkillId;
-		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
-		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-		let schoolPriConfig = $magicSchoolsData[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData[this._selectedSchoolId].SecondaryConfig;
-		let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-		let currPrtyGold = $gameParty.gold();
-		let currPrtyItems = 0;
-		let goldCost = 0;
-		let itemCost = 0;
-		let dataItm = undefined;
-
-		if (this._mode == 0){
-			if (bEnableGoldCost){
-				goldCost = calculateSchoolGoldCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
-
-			if (bEnableItemCost){
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
-				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
-				if (dataItm){
-					currPrtyItems = $gameParty.numItems(dataItm);
-				}
-
-				itemCost = calculateSchoolItemCost(
-					schoolType,
-					schoolPriConfig,
-					schoolSecdConfig,
-					schoolIds
-				);
-			}
-		} else if (this._mode == 1) {
-			let spellId = this._selectedSkillId;
-			let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
-			if (skillData) {
-				this._comList.push("Required Level: " + String(skillData.ReqLevel));
-				if (bEnableGoldCost){
-					goldCost = calculateSkillGoldCost(
-						schoolType,
-						schoolPriConfig,
-						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
-					);
-				}
-
-				if (bEnableItemCost){
-					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
-					dataItm = $dataItems.find(itm => itm && itm.id == costItemId);
-					if (dataItm){
-						currPrtyItems = $gameParty.numItems(dataItm);
-					}
-
-					itemCost = calculateSkillItemCost(
-						schoolType,
-						schoolPriConfig,
-						schoolSecdConfig,
-						schoolIds,
-						skillData,
-						this._selectedSchoolId
-					);
-				}
-			}
+	if (text) {
+		let textState = { index: 0, x: x, y: y, left: x };
+		textState.text = this.convertEscapeCharacters(text);
+		textState.height = this.calcTextHeight(textState, false);
+		while (textState.index < textState.text.length) {
+			this.processCharacter(textState);
 		}
-
-		this._goldCost = goldCost;
-		this._itemCost = itemCost;
-		this._dataItm = (!dataItm ? {} : dataItm);
-
-		if (bEnableGoldCost) { this._comList.push("Required " + TextManager.currencyUnit + ": " + String(goldCost)); } //TODO: Currency icon
-		if (bEnableItemCost) {
-			if (dataItm){
-				let itemCostStr = String(itemCost) + "x " + "\\i[" + dataItm.iconIndex + "] " + dataItm.name + " required";
-				this._comList.push(itemCostStr);
-			}
-		}
+		return textState.x - x;
+	} else {
+		return 0;
 	}
-}
+};
 
 Window_SchoolCost.prototype.refresh = function() {
 	this.contents.clear();
 	if (this._mode != -1 && this._selectedActor && this._selectedSchoolId != -1 &&
 			this._selectedTreeId != -1 && this._selectedSkillId != -1){
-		this.buildComList();
-		this.drawAllItems();
+		this.drawInfo();
 	}
 }
 
@@ -4026,8 +4005,8 @@ Window_SchoolInfo.prototype.initialize = function(x, y, w, h){
 	this._selectedSkillId = 0;
 	this._selectedSchoolType = 0;
 	this._countdown = 0;
-  	this._arrowBlinkTimer = 0;
-  	this._lineHeight = this.lineHeight();
+	this._arrowBlinkTimer = 0;
+	this._lineHeight = this.lineHeight();
 
 	Window_Selectable.prototype.initialize.call(this, x, y, w, h);
 }
@@ -4077,8 +4056,8 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 			secondaryNames = secondaryNames.substr(0, secondaryNames.length - 2);
 		}
 
-		totalText = totalText.concat(primaryNames, secondaryNames);
-		text = fmt.format(primaryNames, secondaryNames);
+		totalText = totalText.concat(primaryNames, secondaryNames, "", "", "", "");
+		text = fmt.format(primaryNames, secondaryNames, "", "", "", "");
 
 		if (totalText.length > 0){
 			textState = { index: 0 };
@@ -4114,7 +4093,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 	let totalText = "";
 	let treeNames = "School Spell Trees:<br>";
 
-	fmt = JSON.parse(treeViewFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSchoolId > 0){
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
@@ -4126,8 +4105,8 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		}
 
 
-		totalText = totalText.concat(treeNames);
-		text = fmt.format(treeNames);
+		totalText = totalText.concat(treeNames, "", "", "", "", "");
+		text = fmt.format(treeNames, "", "", "", "", "");
 
 		textState = { index: 0 };
 		textState.originalText = text;
@@ -4163,7 +4142,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 	let spellNames = "Tree Spells:";
 
 	spellNames = addBreak(spellNames, 'end');
-	fmt = JSON.parse(spellViewFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedTreeId > 0){
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
@@ -4241,8 +4220,8 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 			}
 		}
 
-		totalText = totalText.concat(spellNames);
-		text = fmt.format(spellNames);
+		totalText = totalText.concat(spellNames, "", "", "", "", "");
+		text = fmt.format(spellNames, "", "", "", "", "", "");
 
 
 		textState = { index: 0 };
@@ -4277,7 +4256,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 	let textState = undefined;
 	let totalText = "";
 
-	fmt = JSON.parse(spellInfoFmtTxt || '');
+	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSkillId > 0) {
 		let name = "";
 		let desc = "";
@@ -4505,85 +4484,85 @@ Window_SchoolInfo.prototype.updateMode = function(mode, actorData, selectedSchoo
 }
 
 Window_SchoolInfo.prototype.contentsHeight = function() {
-  var standard = this.height - this.standardPadding() * 2;
-  return Math.max(standard, this._allTextHeight);
+var standard = this.height - this.standardPadding() * 2;
+return Math.max(standard, this._allTextHeight);
 };
 
 Window_SchoolInfo.prototype.updateCountdown = function() {
-  if (this._countdown > 0) {
-    this._countdown -= 1;
-    if (this._countdown <= 0) this.refresh();
-  }
+if (this._countdown > 0) {
+	this._countdown -= 1;
+	if (this._countdown <= 0) this.refresh();
+}
 };
 
 Window_SchoolInfo.prototype.scrollSpeed = function() {
-  if (this._scrollSpeed === undefined) {
-    this._scrollSpeed = 5;
-  }
-  return this._scrollSpeed;
+if (this._scrollSpeed === undefined) {
+	this._scrollSpeed = 5;
+}
+return this._scrollSpeed;
 };
 
 Window_SchoolInfo.prototype.scrollOriginDown = function(speed) {
-  var value = this.contentsHeight() - this.height +
-    this.standardPadding() * 2;
-  this.origin.y = Math.min(value, this.origin.y + speed);
+var value = this.contentsHeight() - this.height +
+	this.standardPadding() * 2;
+this.origin.y = Math.min(value, this.origin.y + speed);
 };
 
 Window_SchoolInfo.prototype.scrollOriginUp = function(speed) {
-  this.origin.y = Math.max(0, this.origin.y - speed);
+this.origin.y = Math.max(0, this.origin.y - speed);
 };
 
 Window_SchoolInfo.prototype.update = function() {
-  Window_Selectable.prototype.update.call(this);
-  this.updateCountdown();
-  if (this.isOpenAndActive()) this.updateKeyScrolling();
+Window_Selectable.prototype.update.call(this);
+this.updateCountdown();
+if (this.isOpenAndActive()) this.updateKeyScrolling();
 };
 
 Window_SchoolInfo.prototype.updateKeyScrolling = function() {
-  if (Input.isPressed('up')) {
-    this.scrollOriginUp(this.scrollSpeed());
-  } else if (Input.isPressed('down')) {
-    this.scrollOriginDown(this.scrollSpeed());
-  } else if (Input.isPressed('pageup')) {
-    this.scrollOriginUp(this.scrollSpeed() * 4);
-  } else if (Input.isPressed('pagedown')) {
-    this.scrollOriginDown(this.scrollSpeed() * 4);
-  }
+if (Input.isPressed('up')) {
+	this.scrollOriginUp(this.scrollSpeed());
+} else if (Input.isPressed('down')) {
+	this.scrollOriginDown(this.scrollSpeed());
+} else if (Input.isPressed('pageup')) {
+	this.scrollOriginUp(this.scrollSpeed() * 4);
+} else if (Input.isPressed('pagedown')) {
+	this.scrollOriginDown(this.scrollSpeed() * 4);
+}
 };
 
 Window_SchoolInfo.prototype.updateArrows = function() {
-  if (this._lastOriginY === this.origin.y) return;
-  this.showArrows();
+if (this._lastOriginY === this.origin.y) return;
+this.showArrows();
 };
 
 Window_SchoolInfo.prototype.showArrows = function() {
-  this._lastOriginY = this.origin.y;
-  this.upArrowVisible = this.origin.y !== 0;
-  this.downArrowVisible = this.origin.y !== this.contentsHeight() -
-    this.height + this.standardPadding() * 2;
+this._lastOriginY = this.origin.y;
+this.upArrowVisible = this.origin.y !== 0;
+this.downArrowVisible = this.origin.y !== this.contentsHeight() -
+	this.height + this.standardPadding() * 2;
 };
 
 Window_SchoolInfo.prototype.hideArrows = function() {
-  this.upArrowVisible = false;
-  this.downArrowVisible = false;
+this.upArrowVisible = false;
+this.downArrowVisible = false;
 };
 
 Window_SchoolInfo.prototype.isInsideFrame = function() {
-  var x = this.canvasToLocalX(TouchInput._mouseOverX);
-  var y = this.canvasToLocalY(TouchInput._mouseOverY);
-  return x >= 0 && y >= 0 && x < this._width && y < this._height;
+var x = this.canvasToLocalX(TouchInput._mouseOverX);
+var y = this.canvasToLocalY(TouchInput._mouseOverY);
+return x >= 0 && y >= 0 && x < this._width && y < this._height;
 };
 
 Window_SchoolInfo.prototype.processWheel = function() {
-  if (!this.isInsideFrame()) { return; }
-  var threshold = 20;
-  if (TouchInput.wheelY >= threshold) {
-    this.scrollOriginDown(this.scrollSpeed() * 4);
-  }
+if (!this.isInsideFrame()) { return; }
+var threshold = 20;
+if (TouchInput.wheelY >= threshold) {
+	this.scrollOriginDown(this.scrollSpeed() * 4);
+}
 
-  if (TouchInput.wheelY <= -threshold) {
-    this.scrollOriginUp(this.scrollSpeed() * 4);
-  }
+if (TouchInput.wheelY <= -threshold) {
+	this.scrollOriginUp(this.scrollSpeed() * 4);
+}
 };
 
 
@@ -4633,10 +4612,10 @@ Window_SchoolCommand.prototype.makeCommandList = function(){
 
 Window_SchoolCommand.prototype.select = function(index){
 	this._index = index;
-    this._stayCount = 0;
-    this.ensureCursorVisible();
-    this.updateCursor();
-    this.callUpdateHelp();
+	this._stayCount = 0;
+	this.ensureCursorVisible();
+	this.updateCursor();
+	this.callUpdateHelp();
 }
 
 Window_SchoolCommand.prototype.processOk = function(){
@@ -5014,11 +4993,11 @@ function resetFontSize(text){
 
 function changeTextColor(text, pos, startColor, endColor){
 	if (pos == "start"){
-		text = "\\c[" + startColor + "]" + text;
+		text = "\\hc[" + startColor + "]" + text;
 	} else if (pos == "end"){
-		text += "\\c[" + endColor + "]";
+		text += "\\hc[" + endColor + "]";
 	} else if (pos == "both"){
-		text = "\\c[" + startColor + "]" + text + "\\c[" + endColor + "]";
+		text = "\\hc[" + startColor + "]" + text + "\\hc[" + endColor + "]";
 	}
 
 	return text;
@@ -5049,7 +5028,7 @@ function obfuscateText(text){
 function calculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
 	let goldCost = 0;
 	if (schoolType.includes("Primary")){
-		 //Additional Pri School
+		//Additional Pri School
 		if (schoolIds.length > 0){
 			goldCost = getSchoolCost(
 				schoolPriConfig.addtSchBase,
@@ -5075,7 +5054,7 @@ function calculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, 
 function calculateSchoolItemCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
 	let itemCost = 0;
 	if (schoolType.includes("Primary")){
-		 //Additional Pri School
+		//Additional Pri School
 		if (schoolIds.length > 0){
 			itemCost = getSchoolCost(
 				schoolPriConfig.addtSchItmBase,
