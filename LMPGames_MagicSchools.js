@@ -564,6 +564,16 @@ var scopeLst = [
 	"1 Ally (Dead)", "All Allies (Dead)", "Self"
 ];
 
+
+/* TouchInput Functions and Aliases */
+var lmpGamesMagicSchools_TouchImput_onMouseMove = TouchInput._onMouseMove;
+TouchInput._onMouseMove = function(event) {
+	lmpGamesMagicSchools_TouchImput_onMouseMove.call(this, event);
+	this._mouseOverX = Graphics.pageToCanvasX(event.pageX);
+	this._mouseOverY = Graphics.pageToCanvasY(event.pageY);
+};
+
+
 /* DataManager Aliases and Functions */
 var lmpGamesMagicSchools_DataManager_MakeSaveContents = DataManager.makeSaveContents;
 DataManager.makeSaveContents = function(){
@@ -1037,6 +1047,7 @@ Scene_MagicSchools.prototype.schoolCharSelected = function(){
 	this._schoolMainWnd.activate();
 	this._schoolMainWnd.select(0);
 
+	this._schoolInfoWnd.updateMode(0, this._selAct, [], []);
 	this._schoolInfoWnd.show();
 
 	if (bEnableGoldCost){
@@ -1264,7 +1275,8 @@ Scene_MagicSchools.prototype.schoolListProcessCancel = function(){
 		this._schoolMainWnd.select(0);
 
 		this._schoolCostWnd.hide();
-		this._schoolLimitsWnd.show();
+		this._schoolLimitsWnd.show();		
+		this._schoolInfoWnd.updateMode(0, this._selAct, [], []);
 	} else if (wndMode == 1){
 		this._schoolSchListWnd.hide();
 		this._schoolSchListWnd.deactivate();
@@ -1509,6 +1521,7 @@ Scene_MagicSchools.prototype.processCmdCancel = function(){
 		this._schoolMainWnd.select(0);
 		this._schoolCostWnd.hide();
 		this._schoolLimitsWnd.show();
+		this._schoolInfoWnd.updateMode(0, this._selAct, [], []);
 	} else if (cmdWndMode == 1){ //Learned new spell
 		let globalGradeType = (this._selectedSchoolType == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 		let gradeType = (this._selectedSchoolType == 0 ? 'PrimarySchools' : 'SecondarySchools');
@@ -4035,39 +4048,53 @@ Window_SchoolInfo.prototype.setMode = function(newMode) {
 
 Window_SchoolInfo.prototype.mainInfo = function(){
 	let fmt = undefined;
-	let bEnableWordwrap = true;
-	let text = undefined;
-	let finalText = undefined;
-	let textState = undefined;
-	let totalText = "";
-	let primaryNames = "Learned Primary Schools:<br>";
-	let secondaryNames = "Learned Secondary Schools:<br>";
-
 	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt){
-		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
+		let bEnableWordwrap = true;
 		let actCls = this._selectedActor._classId;
 		let actSchoolData = this._selectedActor._magicSchoolsData[actCls];
+		let text = undefined;
+		let finalText = undefined;
+		let textState = undefined;
+		let totalText = "";
+		let primaryNames = "Learned Primary Schools:";
+		let secondaryNames = "Learned Secondary Schools:";
+		let schoolNames = "";
 		let actorPrimaries = actSchoolData["PrimarySchools"];
 		let actorSecondaries = actSchoolData["SecondarySchools"];
 
+		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
+		primaryNames = addXShift(primaryNames, 5);
+		primaryNames = addBreak(primaryNames, 'end');
+		secondaryNames = addXShift(secondaryNames, 5);
+		secondaryNames = addBreak(secondaryNames, 'end');
 		if (Object.keys(actorPrimaries).length > 0){
 			for (let key of Object.keys(actorPrimaries)){
 				let currSchool = actorPrimaries[key];
-				primaryNames += currSchool.Name + ", ";
+				let schoolName = currSchool.Name;
+				
+				schoolName = addXShift(schoolName, 25);
+				schoolName = addBreak(schoolName, 'end');
+				schoolNames += schoolName;
 			}
 
-			primaryNames = primaryNames.substr(0, primaryNames.length - 2);
-			primaryNames += "<br><br>";
+			primaryNames += schoolNames;
 		}
+		primaryNames = addBreak(primaryNames, 'end');
+
+		schoolNames = "";
 
 		if (Object.keys(actorSecondaries).length > 0){
 			for (let key of Object.keys(actorSecondaries)){
 				let currSchool = actorSecondaries[key];
-				secondaryNames += currSchool.Name + ", ";
+				let schoolName = currSchool.Name;
+				
+				schoolName = addXShift(schoolName, 25);
+				schoolName = addBreak(schoolName, 'end');
+				schoolNames += schoolName;
 			}
 
-			secondaryNames = secondaryNames.substr(0, secondaryNames.length - 2);
+			secondaryNames += schoolNames;
 		}
 
 		totalText = totalText.concat(primaryNames, secondaryNames, "", "", "", "");
@@ -4100,27 +4127,31 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 
 Window_SchoolInfo.prototype.treeInfo = function(){
 	let fmt = undefined;
-	let bEnableWordwrap = true;
-	let text = undefined;
-	let finalText = undefined;
-	let textState = undefined;
-	let totalText = "";
-	let treeNames = "School Spell Trees:<br>";
-
 	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSchoolId > 0){
-		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
-
+		let bEnableWordwrap = true;
+		let text = undefined;
+		let finalText = undefined;
+		let textState = undefined;
+		let totalText = "";
+		let title = "School Spell Trees:";
+		let treeNames = "";
 		let globalTrees = $magicSchoolsData[this._selectedSchoolId].Trees;
 
+		title = addXShift(title, 5);
+		title = addBreak(title, 'end');
+		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 		for (let key of Object.keys(globalTrees)){
 			let currTree = globalTrees[key];
-			treeNames += currTree.Name + "<br>";
+			let treeName = currTree.Name;
+			treeName = addXShift(treeName, 25);
+			treeName = addBreak(treeName, 'end');
+			
+			treeNames += treeName;
 		}
 
-
-		totalText = totalText.concat(treeNames, "", "", "", "", "");
-		text = fmt.format(treeNames, "", "", "", "", "");
+		totalText = totalText.concat(title, treeNames, "", "", "", "");
+		text = fmt.format(title, treeNames, "", "", "", "");
 
 		textState = { index: 0 };
 		textState.originalText = text;
@@ -4148,16 +4179,17 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 
 Window_SchoolInfo.prototype.spellInfo = function(){
 	let fmt = "";
-	let bEnableWordwrap = true;
-	let text = "";
-	let finalText = "";
-	let textState = "";
-	let totalText = "";
-	let spellNames = "Tree Spells:";
-
-	spellNames = addBreak(spellNames, 'end');
 	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedTreeId > 0){
+		let bEnableWordwrap = true;
+		let text = "";
+		let finalText = "";
+		let textState = "";
+		let totalText = "";
+		let spellNames = "Tree Spells:";
+
+		spellNames = addXShift(spellNames, 5);
+		spellNames = addBreak(spellNames, 'end');
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
 		let globalTree = $magicSchoolsData[this._selectedSchoolId].Trees[this._selectedTreeId];
@@ -4198,6 +4230,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 
 			if (spellListDispMode == 0){
 				let spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")" + (isLearned ? ' - Learned' : '');
+				spellName = addXShift(spellName, 25);
 				spellName = addBreak(spellName, 'end');
 				spellNames += spellName
 			} else if (spellListDispMode == 1) {
@@ -4213,6 +4246,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 					}
 				}
 
+				spellName = addXShift(spellName, 25);
 				spellName = addBreak(spellName, 'end');
 				spellNames += spellName
 
@@ -4229,6 +4263,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 					}
 				}
 
+				spellName = addXShift(spellName, 25);
 				spellName = addBreak(spellName, 'end');
 				spellNames += spellName
 			}
@@ -4236,7 +4271,6 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 
 		totalText = totalText.concat(spellNames, "", "", "", "", "");
 		text = fmt.format(spellNames, "", "", "", "", "", "");
-
 
 		textState = { index: 0 };
 		textState.originalText = text;
@@ -4264,14 +4298,13 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 
 Window_SchoolInfo.prototype.spellDataInfo = function(){
 	let fmt = undefined;
-	let bEnableWordwrap = true;
-	let text = undefined;
-	let finalText = undefined;
-	let textState = undefined;
-	let totalText = "";
-
 	fmt = JSON.parse(mainInfoFmtTxt || '');
 	if (fmt && this._selectedSkillId > 0) {
+		let bEnableWordwrap = true;
+		let text = undefined;
+		let finalText = undefined;
+		let textState = undefined;
+		let totalText = "";
 		let name = "";
 		let desc = "";
 		let skillData = $dataSkills.find(sk => sk && sk.id == this._selectedSkillId);
@@ -4280,163 +4313,147 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		let invSkInfo = "";
 		let dmgSkInfo = "";
 		let effSkInfo = "";
-		let effStates = undefined;
-		let effBuffs = undefined;
-		let effRmvBuffs = undefined;
-		let effRmvDebuffs = undefined;
-		let effGrowth = undefined;
-		let effSpecEff = undefined;
-		let effComEvts = undefined;
-		let effHPRecov = undefined;
-		let effMPRecov = undefined;
-		let effTPRecov = undefined;
 
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
-		name = currSkill.name + "<br>";
+		name = currSkill.name;
+		name = addBreak(name, 'end');
 		if (currSkill.description.length > 0){
-			desc = currSkill.description + "<br><br>";
+			desc = currSkill.description;
+			desc = addBreak(desc, 'end');
+			desc = addBreak(desc, 'end');
 		} else {
-			name += "<br>";
+			name = addBreak(name, 'end');
 		}
 
 		//Misc Skl Info Section
-		miscSkInfo = "Magic School: " + $dataSystem.elements[currSkill.damage.elementId] + "<br>";
-		if (currSkill.mpCost > 0) { miscSkInfo += "MP Cost: " + currSkill.mpCost + "<br>"; }
-		if (currSkill.tpCost > 0) { miscSkInfo += "TP Cost: " + currSkill.tpCost + "<br>"; }
-		if (currSkill.tpGain > 0) { miscSkInfo += "Gain " + currSkill.tpGain + " TP on use<br>"; }
-		if (currSkill.scope > 0) { miscSkInfo += "Scope: " + scopeLst[currSkill.scope] + "<br>"; }
-		miscSkInfo += "Usable: " + occLst[currSkill.occasion] + "<br><br>";
+		miscSkInfo = "Magic School: " + $dataSystem.elements[currSkill.damage.elementId];
+		miscSkInfo = addXShift(miscSkInfo, 5);
+		miscSkInfo = addBreak(miscSkInfo, 'end');
+
+		let useOccasion = "Use Occasion: " + occLst[skillData.occ];
+		useOccasion = addXShift(useOccasion, 5);
+		useOccasion = addBreak(useOccasion, 'end');
+
+		miscSkInfo += useOccasion;
+
+		if (skillData.mpCost > 0) {
+			let mpCost = "MP Cost: " + skillData.mpCost;
+			mpCost = addXShift(mpCost, 5);
+			mpCost = addBreak(mpCost, 'end');
+
+			miscSkInfo += mpCost;
+		}
+
+		if (skillData.tpCost > 0) {
+			let tpCost = "TP Cost: " + skillData.tpCost;
+			tpCost = addXShift(tpCost, 5);
+			tpCost = addBreak(tpCost, 'end');
+
+			miscSkInfo += tpCost;
+		}
+
+		if (skillData.tpGain > 0) {
+			let tpGain = "Gain " + String(skillData.tpGain) + " TP on use";
+			tpGain = addXShift(tpGain, 5);
+			tpGain = addBreak(tpGain, 'end');
+
+			miscSkInfo += tpGain;
+		}
+
+		if (skillData.scope > 0) {
+			let scope = "Scope: " + scopeLst[skillData.scope];
+			scope = addXShift(scope, 5);
+			scope = addBreak(scope, 'end');
+
+			miscSkInfo += scope;
+		}
+
+		miscSkInfo = addBreak(miscSkInfo, 'end');
 
 
 		//Invocation Section Info
-		invSkInfo = "Invocation Details:<br>";
-		if (currSkill.delay > 0) { invSkInfo += "Delay: " + currSkill.speed + "<br>"; }
-		if (currSkill.success > 0) { invSkInfo += "Use Chance: " + currSkill.success + "%<br>"; }
-		if (currSkill.repeats > 1) { invSkInfo += "Repeats " + currSkill.repeats + " times<br>"; }
-		invSkInfo += "Evasion Type: " + hitTypLst[currSkill.hitType] + "<br>";
+		invSkInfo = "Invocation Details:";
+		invSkInfo = addXShift(invSkInfo, 5);
+		invSkInfo = addBreak(invSkInfo, 'end');
+
+		let evasionType = "Evasion Type: " + hitTypLst[skillData.hitType];
+		evasionType = addXShift(evasionType, 25);
+		evasionType = addBreak(evasionType, 'end');
+
+		invSkInfo += evasionType;
+
+		if (skillData.delay > 0) {
+			let delay = "Delay: " + skillData.delay;
+			delay = addXShift(delay, 25);
+			delay = addBreak(delay, 'end');
+
+			invSkInfo += delay;
+		}
+
+		if (skillData.success > 0) {
+			let hitChance = "Hit Chance: " + skillData.success;
+			hitChance = addXShift(hitChance, 25);
+			hitChance = addBreak(hitChance, 'end');
+
+			invSkInfo += hitChance;
+		}
+
+		if (skillData.repeats > 1) {
+			let repeatNum = "Repeats " + skillData.repeats + " times";
+			repeatNum = addXShift(repeatNum, 25);
+			repeatNum = addBreak(repeatNum, 'end');
+
+			invSkInfo += repeatNum;
+		}
+
+		invSkInfo = addBreak(invSkInfo, 'end');
 
 		//Damage Section Info
-		if (currSkill.damage.type != 0){
-			dmgSkInfo = "<br>Damage Information:";
-			dmgSkInfo += "<br>Damage Type: " + dmgTypLst[currSkill.damage.type];
-			if (currSkill.damage.elementId > 0) { dmgSkInfo += "<br>Damage Element: " + $dataSystem.elements[currSkill.damage.elementId]; }
-			if (currSkill.damage.variance > 0) { dmgSkInfo += "<br>Damage Variance: " + currSkill.damage.variance + "%"; }
-			if (currSkill.damage.critical) { dmgSkInfo += "<br>" + "Can Critical"; }
-			dmgSkInfo += "<br>";
+		if (skillData.damage.type != 0){
+			dmgSkInfo = "Damage Information:";
+			dmgSkInfo = addXShift(dmgSkInfo, 5);
+			dmgSkInfo = addBreak(dmgSkInfo, 'end');
+
+			let dmgType = "Damage Type: " + dmgTypLst[skillData.damage.type];
+			dmgType = addXShift(dmgType, 25);
+			dmgType = addBreak(dmgType, 'end');
+
+			dmgSkInfo += dmgType;
+
+			if (skillData.damage.elementId > 0) {
+				let dmgElement = "Damage Element: " + $dataSystem.elements[skillData.damage.elementId];
+				dmgElement = addXShift(dmgElement, 25);
+				dmgElement = addBreak(dmgElement, 'end');
+
+				dmgSkInfo += dmgElement;
+			}
+
+			if (skillData.damage.variance > 0) {
+				let dmgVariance = "Damage Variance: " + skillData.damage.variance + "%";
+				dmgVariance = addXShift(dmgVariance, 25);
+				dmgVariance = addBreak(dmgVariance, 'end');
+
+				dmgSkInfo += dmgVariance;
+			}
+
+			if (skillData.damage.critical) {
+				let dmgCrit = "Can Critical";
+				dmgCrit = addXShift(dmgCrit, 25);
+				dmgCrit = addBreak(dmgCrit, 'end');
+
+				dmgSkInfo += dmgCrit;
+			}
+
+			dmgSkInfo = addBreak(dmgSkInfo, 'end');
 		}
 
-		let sklEffects = [];
-
-		/*if (bIsMagicCraftingEnabled){
-
-		} else {
-
-		}*/
-
-		sklEffects = currSkill.effects;
 		let bHasEffects = false;
-		if (!hasNoEffects(sklEffects)){
+		if (!hasNoEffects(skillData.effects)){
 			bHasEffects = true;
-			let displayEffects = buildEffectList(sklEffects);
-
-			effSkInfo = "<br>Effects:";
-			effStates = displayEffects.states;
-			effBuffs = displayEffects.buffs;
-			effRmvBuffs = displayEffects.rmvbuffs;
-			effRmvDebuffs = displayEffects.rmvdebuffs;
-			effGrowth = displayEffects.growth;
-			effSpecEff = displayEffects.speceffs;
-			effComEvts = displayEffects.comevts;
-			effHPRecov = displayEffects.hpRecov;
-			effMPRecov = displayEffects.mpRecov;
-			effTPRecov = displayEffects.tpRecov;
-
-			if (effStates.length > 0) {
-				effSkInfo += "<br>States:<br>";
-
-				for (var i1 = 0; i1 < effStates.length; i1++){
-					effSkInfo += effStates[i1] + "<br>";
-				}
-			}
-
-			if (effBuffs.length > 0) {
-				effSkInfo += "<br>Buffs:<br>";
-
-				for (var i1 = 0; i1 < effBuffs.length; i1++){
-					effSkInfo += effBuffs[i1] + "<br>";
-				}
-			}
-
-			if (effRmvBuffs.length > 0) {
-				effSkInfo += "<br>Remove Buffs:<br>";
-
-				for (var i1 = 0; i1 < effRmvBuffs.length; i1++){
-					effSkInfo += effRmvBuffs[i1] + "<br>";
-				}
-			}
-
-			if (effRmvDebuffs.length > 0) {
-				effSkInfo += "<br>Remove Debuffs:<br>";
-
-				for (var i1 = 0; i1 < effRmvDebuffs.length; i1++){
-					effSkInfo += effRmvDebuffs[i1] + "<br>";
-				}
-			}
-
-			if (effHPRecov.length > 0 || effMPRecov.length > 0 || effTPRecov.length > 0) {
-				effSkInfo += "<br>Recovery:";
-
-				if (effHPRecov.length > 0){
-					effSkInfo += "<br>HP:<br>";
-
-					for (var i1 = 0; i1 < effHPRecov.length; i1++){
-						effSkInfo += effHPRecov[i1] + "<br>";
-					}
-				}
-
-				if (effMPRecov.length > 0){
-					effSkInfo += "<br>MP:<br>";
-					for (var i1 = 0; i1 < effMPRecov.length; i1++){
-						effSkInfo += effMPRecov[i1] + "<br>";
-					}
-				}
-
-				if (effTPRecov.length > 0){
-					effSkInfo += "<br>TP:<br>";
-					for (var i1 = 0; i1 < effTPRecov.length; i1++){
-						effSkInfo += effTPRecov[i1] + "<br>";
-					}
-				}
-			}
-
-			if (effSpecEff.length > 0){
-				effSkInfo += "<br>Special Effects:<br>";
-
-				for (var i1 = 0; i1 < effSpecEff.length; i1++){
-					effSkInfo += effSpecEff[i1] + "<br>";
-				}
-			}
-
-			if (effGrowth.length > 0){
-				effSkInfo += "<br>Growth Effects:<br>";
-
-				for (var i1 = 0; i1 < effGrowth.length; i1++){
-					effSkInfo += effGrowth[i1] + "<br>";
-				}
-			}
-
-			if (effComEvts.length > 0){
-				effSkInfo += "<br>Common Events:<br>";
-
-				for (var i1 = 0; i1 < effComEvts.length; i1++){
-					effSkInfo += effComEvts[i1] + "<br>";
-				}
-			}
-
-			effSkInfo += "<br>"
+			let displayEffects = buildEffectList(skillData.effects);
+			effSkInfo = this.generateEffectStr(displayEffects);
 		}
-
 
 		totalText = totalText.concat(name, desc, miscSkInfo, invSkInfo, dmgSkInfo, effSkInfo, "", "");
 		text = fmt.format(name, desc, miscSkInfo, invSkInfo, dmgSkInfo, effSkInfo, "", "");
@@ -4455,7 +4472,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 
 			this._allTextHeight += this._allTextHeight * 0.25;
 			let numOfBreaks = text.match(/<br>/g).length;
-			this._allTextHeight += (numOfBreaks * 9) - (!bHasEffects ? (text.length / 1.25) : 0);
+			this._allTextHeight += (numOfBreaks * 15) - (!bHasEffects ? (text.length / 1.25) : 0);
 		} else {
 			this._allTextHeight = 2;
 		}
@@ -4463,6 +4480,116 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		this.createContents();
 		this.drawTextEx(text, 0, 0);
 	}
+}
+
+Window_SchoolInfo.prototype.generateEffectStr = function(effects){
+	let effectStr = "Effects:";
+	effectStr = addXShift(effectStr, 5);
+	effectStr = addBreak(effectStr, 'end');
+
+	effStates = effects.states;
+	effBuffs = effects.buffs;
+	effRmvBuffs = effects.rmvbuffs;
+	effRmvDebuffs = effects.rmvdebuffs;
+	effGrowth = effects.growth;
+	effSpecEff = effects.speceffs;
+	effComEvts = effects.comevts;
+	effHPRecov = effects.hpRecov;
+	effMPRecov = effects.mpRecov;
+	effTPRecov = effects.tpRecov;
+	effLrnSkills = effects.skills;
+
+	if (effStates.length > 0) {
+		let effectStateStr = this.buildDataList("States:", effStates, 25, 35);
+		effectStr += effectStateStr;
+	}
+
+	if (effBuffs.length > 0) {
+		let effectBuffStr = this.buildDataList("Buffs:", effBuffs, 25, 35);
+		effectStr += effectBuffStr;
+	}
+
+	if (effRmvBuffs.length > 0) {
+		let effectRmvBuffStr = this.buildDataList("Remove Buffs:", effRmvBuffs, 25, 35);
+		effectStr += effectRmvBuffStr;
+	}
+
+	if (effRmvDebuffs.length > 0) {
+		let effectRmvDebuffStr = this.buildDataList("Remove Debuffs:", effRmvDebuffs, 25, 35);
+		effectStr += effectRmvDebuffStr;
+	}
+
+	if (effSpecEff.length > 0){
+		let effectSpecialStr = this.buildDataList("Special Effects:", effSpecEff, 25, 35);
+		effectStr += effectSpecialStr;
+	}
+
+	if (effGrowth.length > 0){
+		let effectGrowthStr = this.buildDataList("Growth Effects:", effGrowth, 25, 35);
+		effectStr += effectGrowthStr;
+	}
+
+	if (effComEvts.length > 0 && bDebugModeEnabled){
+		let effectCommonEvsStr = this.buildDataList("Common Events:", effComEvts, 25, 35);
+		effectStr += effectCommonEvsStr;
+	}
+
+	if (effHPRecov.length > 0 || effMPRecov.length > 0 || effTPRecov.length > 0) {
+		let effectRecovStr = "Recovery:";
+		effectRecovStr = addXShift(effectRecovStr, 25);
+		effectRecovStr = addBreak(effectRecovStr, 'end');
+
+		if (effHPRecov.length > 0){
+			let effectHPRecovStr = this.buildDataList("HP:", effHPRecov, 35, 45);
+			effectRecovStr += effectHPRecovStr;
+		}
+
+		if (effMPRecov.length > 0){
+			let effectMPRecovStr = this.buildDataList("MP:", effMPRecov, 35, 45);
+			effectRecovStr += effectMPRecovStr;
+		}
+
+		if (effTPRecov.length > 0){
+			let effectTPRecovStr = this.buildDataList("TP:", effTPRecov, 35, 45);
+			effectRecovStr += effectTPRecovStr;
+		}
+
+		effectStr += effectRecovStr;
+	}
+
+	if (effLrnSkills.length > 0) {
+		let effectSkillStr = this.buildDataList("Skills:", effLrnSkills, 25, 35);
+		effectStr += effectSkillStr;
+	}
+
+	return effectStr;
+}
+
+Window_SchoolInfo.prototype.buildDataList = function(dataTitle, data, titleXShift, dataXShift, dataYShift){
+	let builtStr = "";
+
+	if (dataTitle.length > 0){
+		dataTitle = addXShift(dataTitle, titleXShift);
+		dataTitle = addBreak(dataTitle, 'end');
+	}
+
+	let dataStr = "";
+	for (let i1 = 0; i1 < data.length; i1++){
+		let newData = "";		
+		newData += data[i1];
+		newData = addXShift(newData, dataXShift);
+		newData = addBreak(newData, 'end');
+
+		dataStr += newData;
+	}
+
+	if (dataTitle.length > 0) {
+		dataStr = addBreak(dataStr, 'end');
+	}
+
+	builtStr = (dataTitle.length > 0 ? dataTitle : "");
+	builtStr += dataStr;
+	return builtStr;
 }
 
 Window_SchoolInfo.prototype.refresh = function() {
@@ -4487,7 +4614,7 @@ Window_SchoolInfo.prototype.refresh = function() {
 	}
 };
 
-Window_SchoolInfo.prototype.updateMode = function(mode, actorData, selectedSchoolType ,selectedSchool, selectedTree, selectedSpell){
+Window_SchoolInfo.prototype.updateMode = function(mode, actorData, selectedSchoolType, selectedSchool, selectedTree, selectedSpell){
 	this._windowMode = mode;
 	this._selectedActor = actorData;
 	this._selectedSchoolType = (selectedSchoolType ? (selectedSchoolType.length > 0 ? selectedSchoolType[0] : -1) : -1);
