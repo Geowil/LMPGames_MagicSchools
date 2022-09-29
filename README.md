@@ -82,9 +82,11 @@ The Item and Gold Cost Systems are optional systems to impose extra requirements
 The Gold System is pretty simple, turn it and go.  If you need to modify the formulas or values, check the Plugin Settings section first for important about these and how they are used.
 
 The Item Cost System is a bit more complex.  In addition to the cost formulas and static values you must also set up the item(s) to used as the cost item.  There three settings for this:
-    - The global cost item which applied to all schools and skills that don't have a cost item assigned
-    - The school cost item which will override the global cost item and apply to skills that do not have a cost item assigned.
-    - The skill cost item which wil override the school cost item if assigned in the note tag.
+    <ul>
+        <li>The global cost item which applied to all schools and skills that don't have a cost item assigned</li>
+        <li>The school cost item which will override the global cost item and apply to skills that do not have a cost item assigned.</li>
+        <li>The skill cost item which wil override the school cost item if assigned in the note tag.</li>
+    </ul>
 
 For more information on the settings and note tag attributes, see the respective sections below.
 
