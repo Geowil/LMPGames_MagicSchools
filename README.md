@@ -126,7 +126,11 @@ For more information on how to set skills up when using the Magic Crafting plugi
 
 
 ## Plugin Settings
-### Magic Crafting Support
+The following is a list of plugin settings available with this plugin and descriptions of what they are used for.  This also includes the default values in case these need to be restored.
+
+
+### Main Settings
+#### Magic Crafting Support
 **Description**<br>
 When enabled, enables support for the Magic Crafting plugin which changes
 some of the functionality on this plugin.  Mainly, skills, when learned, do not unlock the next skill in a tree to be learned.  Instead, the skill is marked "Craftable" and must be crafted before it can be learned.
@@ -140,7 +144,7 @@ Boolean (True/False)
 False
 
 
-### Enable Gold Cost System
+#### Enable Gold Cost System
 **Description**<br>
 When enabled, activates a cost system that calculates a currency cost to unlock shools and learn spells.
 
@@ -153,7 +157,7 @@ Boolean (True/False)
 False
 
 
-### Enable Item Cost System
+#### Enable Item Cost System
 **Description**<br>
 When enabled, activates a cost system that calculates a cost in items to unlock schools and learn spells.
 
@@ -173,7 +177,21 @@ Boolean (True/False)
 False<br><br>
 
 
-### Spell Info Display Mode
+#### Default Cost Item Id
+**Description**<br>
+When the Item Cost System is enabled, this sets the default cost item id to be used by that system.  This setting applies globally to the plugin unless overridden by a lower-level setting (a school cost item id or a skill cost item id setting).
+
+Any school or skill that does not have a cost item id defined will use this item when removing items from the party inventory.
+
+
+**Type**<br>
+Item
+
+**Default**<br>
+0
+
+
+#### Spell Info Display Mode
 **Description**<br>
 This setting allows you to define how certain information will be displayed to the player.
 
@@ -199,7 +217,6 @@ There are three Modes:
 
 Insert Images
 
-
 **Type**<br>
 Number (0, 1, 2)
 
@@ -207,7 +224,140 @@ Number (0, 1, 2)
 0
 
 
-### sss
+#### Obfuscation Character
+**Description**<br>
+This setting allows you to choose what character is used to hide spell data when the Spell Info Display Mode setting is set to 2.
+
+Some characters might have adverse reactions so be careful when using non-standard or language specific special characters.
+
+**Type**<br>
+Text
+
+**Default**<br>
+?
+
+
+#### Max Obfuscation Characters
+**Description**<br>
+This setting allows you to set the maximum number of characters to use during obfuscation of spell information.  This means that any section of text longer than this setting will be truncated, and only the specified number of characters will be used.
+
+Use this when you want to both hide spell information and prevent the player from being able to guess what the spell names are based on the length of the name.
+
+Example<br>
+A skill named Megaflare with obfuscation turned on and a max character setting of 5 will produce the following output:
+```
+????? (Megaf)
+```
+
+**Type**<br>
+Number (1-20)
+
+**Default**<br>
+1
+
+
+
+#### Enable Spell Auto-Unlock
+**Description**<br>
+When enabled, this setting will automatically unlock the next spell in a tree when a spell has been learned.  When Magic Crafting support is enabled; instead of unlocking the spell in the school tree, the spell is marked as "Craftable" and can be immediatly crafted.
+
+When this setting is disabled, you will be required to manually enable spells via the Enable Learning plugin command for this plugin or the Enable Crafting plugin command if you have support for the Magic Crafting plugin enabled.
+
+**Type**<br>
+Boolean (True/False)
+
+**Default**<br>
+False
+
+
+
+#### Enable Learned Label
+**Description**<br>
+When enabled, this setting will add a " - Learned" label to spell names in the tree list window spell info so that players can easily keep track of what they have learned from each tree.
+
+**Type**<br>
+Boolean (True/False)
+
+**Default**<br>
+False
+
+
+
+#### Enable Name Aliasing
+**Description**<br>
+When enabled, this setting allows for long item and spell names to be displayed by an abbrviated name so that they can be properly shown in some plugin windows.
+
+When this is enabled, note tag attributes for skills and items are not required, however, in order for a name to be shortened, a note tag attribute must be added to the skill or item.  More information on these note tags can be found in the respective tag section below.
+
+**Type**<br>
+Boolean
+
+**Default**<br>
+False
+
+
+
+#### Info Formatting
+**Description**<br>
+Do not change this setting unless you know what you are doing.  This setting sets the formatting used by the plugin to display information within the plugin.  Removing anything from this may result in unexpected behavior or invalid data being shown.
+
+
+**Type**<br>
+Note
+
+**Default**<br>
+"<WordWrap>\n%1\n%2\n%3\n%4\n%5\n%6"
+
+
+
+
+#### Requirement Not Met Color
+**Description**<br>
+This setting sets the text color for when there are requirements that the player doesn't meet when unlocking a school or skill.  The format of the value in this setting is an 8-digit color hex code without the hashtag.
+
+**Type**<br>
+Text (ABCDEF)
+
+**Default**<br>
+A80000
+
+
+
+### School Settings
+This section will break down a school setting.  To remove or add school settings from the plugin, please see the Configuration section above where the steps to do so are detailed.  If you need to modify the number of schools needed, please wait until after following those steps before continuing here for help with configuring the school settings.
+
+Each school setting is identified with the word "School" followed by a number.  This number is required and is extremely important for the operation of the plugin.  Below we will cover the School setting object; this object is the same for every school you configure the plugin to have.
+
+
+#### Name
+**Description**<br>
+This setting is required<br>
+This is the name for the school.  Generally this will be the name of the element that this school represents.
+
+**Type**<br>
+Text
+
+
+#### Trees
+This is an inner object that contains the configuration setting for each tree within the school.  To add or remove trees from a school, see the Configuration section above.
+
+
+
+##### Id
+**Description**<br>
+This setting is required<br>
+This is the ID for the tree.  This should be the same value as the number in the Tree #.
+
+
+**Type**<br>
+Text
+
+
+
+##### Name
+
+
+
 
 ## Plugin Commands - Optional
 	Optional if there are no plugin commands.
