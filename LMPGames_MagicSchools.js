@@ -46,9 +46,9 @@
 * @param Max Obfuscation Characters
 * @desc When display mode 2 is enabled, this sets the max number of characters to use when hiding skill names.
 * @type number
-* @min 0
+* @min 1
 * @max 20
-* @default 0
+* @default 1
 *
 *
 * @param Default Cost Item Id
