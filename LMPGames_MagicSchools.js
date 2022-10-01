@@ -1482,7 +1482,7 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		let currTree = {};
 		let nextSpellId = 0;
 
-		if ($magicSchoolsData.hasOwnProperty(this._selectedSchoolId)){
+		if ($magicSchoolsData.schools.hasOwnProperty(this._selectedSchoolId)){
 			let currSchool = $magicSchoolsData.schools[this._selectedSchoolId];
 			if (currSchool.Trees.hasOwnProperty(this._selectedTreeId)){
 				currTree = currSchool.Trees[this._selectedTreeId];
