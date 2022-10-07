@@ -567,16 +567,6 @@ var scopeLst = [
 	"1 Ally (Dead)", "All Allies (Dead)", "Self"
 ];
 
-
-/* TouchInput Functions and Aliases */
-var lmpGamesMagicSchools_TouchImput_onMouseMove = TouchInput._onMouseMove;
-TouchInput._onMouseMove = function(event) {
-	lmpGamesMagicSchools_TouchImput_onMouseMove.call(this, event);
-	this._mouseOverX = Graphics.pageToCanvasX(event.pageX);
-	this._mouseOverY = Graphics.pageToCanvasY(event.pageY);
-};
-
-
 /* DataManager Aliases and Functions */
 var lmpGamesMagicSchools_DataManager_MakeSaveContents = DataManager.makeSaveContents;
 DataManager.makeSaveContents = function(){
@@ -2382,7 +2372,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 				if (schoolType.includes("Primary")){
 					//Additional Pri School
 					if (schoolIds.length > 0){
-						goldCost = getSchoolCost(
+						goldCost = lmpGamesMagicSchools_GetSchoolCost(
 							schoolPriConfig.addtSchBase,
 							schoolPriConfig.addtSchMod,
 							schoolPriConfig.addtSchMulti,
@@ -2391,7 +2381,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 						);
 					}
 				} else {
-					goldCost = getSchoolCost(
+					goldCost = lmpGamesMagicSchools_GetSchoolCost(
 						schoolSecdConfig.schBase,
 						schoolSecdConfig.schMod,
 						schoolSecdConfig.schMulti,
@@ -2402,7 +2392,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 			}
 
 			if (bEnableItemCost){
-				costItemId = getSchoolCostItemId(this._selectedSchoolId);
+				costItemId = lmpGamesMagicSchools_GetSchoolCostItemId(this._selectedSchoolId);
 				dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 				if (dataItm){
 					currPrtyItems = $gameParty.numItems(dataItm);
@@ -2411,7 +2401,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 				if (schoolType.includes("Primary")){
 					//Additional Pri School
 					if (schoolIds.length > 0){
-						itemCost = getSchoolCost(
+						itemCost = lmpGamesMagicSchools_GetSchoolCost(
 							schoolPriConfig.addtSchItmBase,
 							schoolPriConfig.addtSchItmMod,
 							schoolPriConfig.addtSchItmMulti,
@@ -2420,7 +2410,7 @@ Window_SchoolList.prototype.drawItem = function(index){
 						);
 					}
 				} else {
-					itemCost = getSchoolCost(
+					itemCost = lmpGamesMagicSchools_GetSchoolCost(
 						schoolSecdConfig.schItmBase,
 						schoolSecdConfig.schItmMod,
 						schoolSecdConfig.schItmMulti,
@@ -2671,7 +2661,7 @@ Window_SchoolList.prototype.processOk = function(){
 				let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
 				let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
 				if (bEnableGoldCost){
-					goldCost = calculateSchoolGoldCost(
+					goldCost = lmpGamesMagicSchools_CalculateSchoolGoldCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
@@ -2680,13 +2670,13 @@ Window_SchoolList.prototype.processOk = function(){
 				}
 
 				if (bEnableItemCost){
-					costItemId = getSchoolCostItemId(this._selectedSchoolId);
+					costItemId = lmpGamesMagicSchools_GetSchoolCostItemId(this._selectedSchoolId);
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
 					}
 
-					itemCost = calculateSchoolItemCost(
+					itemCost = lmpGamesMagicSchools_CalculateSchoolItemCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
@@ -3287,7 +3277,7 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		if (skillData) {
 			if (skillData.ReqLevel <= actLevel) {
 				if (bEnableGoldCost){
-					goldCost = calculateSkillGoldCost(
+					goldCost = lmpGamesMagicSchools_CalculateSkillGoldCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
@@ -3298,13 +3288,13 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 				}
 
 				if (bEnableItemCost){
-					costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
 					}
 
-					itemCost = calculateSkillItemCost(
+					itemCost = lmpGamesMagicSchools_CalculateSkillItemCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
@@ -3334,7 +3324,7 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 			this.changePaintOpacity(true);
 		}
 
-		finalName = getDisplayName(this._width, skillData, this.contents);
+		finalName = LMPGamesCore.functions.getDisplayName(this._width, skillData, this.contents);
 	}
 
 	if (this._comList[this._pageIndex][index] == "Cancel"){
@@ -3589,7 +3579,7 @@ Window_SchoolSpellList.prototype.processOk = function(){
 				if (skillData) {
 					if (skillData.ReqLevel <= actLevel) {
 						if (bEnableGoldCost){
-							goldCost = calculateSkillGoldCost(
+							goldCost = lmpGamesMagicSchools_CalculateSkillGoldCost(
 								schoolType,
 								schoolPriConfig,
 								schoolSecdConfig,
@@ -3600,13 +3590,13 @@ Window_SchoolSpellList.prototype.processOk = function(){
 						}
 
 						if (bEnableItemCost){
-							costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+							costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
 							dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 							if (dataItm){
 								currPrtyItems = $gameParty.numItems(dataItm);
 							}
 
-							itemCost = calculateSkillItemCost(
+							itemCost = lmpGamesMagicSchools_CalculateSkillItemCost(
 								schoolType,
 								schoolPriConfig,
 								schoolSecdConfig,
@@ -3676,17 +3666,17 @@ Window_SchoolLimits.prototype.getHeight = function() { return this._height; }
 Window_SchoolLimits.prototype.getWidth = function() { return this._width; }
 Window_SchoolLimits.prototype.maxItems = function() { return (this._comList ? this._comList.length : 1);}
 Window_SchoolLimits.prototype.numVisibleRows = function() { return 2; }
-Window_SchoolLimits.prototype.setActorData = function(selAct) {
+Window_SchoolLimits.prototype.setActorData = function(selAct){
 	this._selectedActor = selAct;
 	this.refresh();
 }
 
-Window_SchoolLimits.prototype.itemHeight = function() {
+Window_SchoolLimits.prototype.itemHeight = function(){
 	let clientHeight = this._height - this.padding * 2;
 	return Math.floor(clientHeight / this.numVisibleRows());
 }
 
-Window_SchoolLimits.prototype.itemWidth = function() {
+Window_SchoolLimits.prototype.itemWidth = function(){
 	return Math.floor((this._width - this.padding * 2 +
 				this.spacing()) / this.maxCols() - this.spacing());
 }
@@ -3702,7 +3692,7 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 
 	let actSchoolData = this._selectedActor._magicSchoolsData;
 
-	if (actSchoolData && Object.keys(actSchoolData).length > 0){
+	if (actSchoolData && Object.keys(actSchoolData).length > 0) {
 		//Actor Data
 		let actClassId = this._selectedActor._classId;
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
@@ -3728,20 +3718,20 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
 
 			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
-			title = addXShift(title, titlePos);
-			title = changeFontSize(title, 26);
-			title = addBreak(title, 'end');
+			title = LMPGamesCore.functions.addXShift(title, titlePos);
+			title = LMPGamesCore.functions.changeFontSize(title, 26);
+			title = LMPGamesCore.functions.addBreak(title, 'end');
 
 			priSlotStr = "Primary Slots: " + String(finalPrimaries);
-			priSlotStr = addXShift(priSlotStr, 5);
-			priSlotStr = changeFontSize(priSlotStr, 24);
-			priSlotStr = addBreak(priSlotStr, 'end');
+			priSlotStr = LMPGamesCore.functions.addXShift(priSlotStr, 5);
+			priSlotStr = LMPGamesCore.functions.changeFontSize(priSlotStr, 24);
+			priSlotStr = LMPGamesCore.functions.addBreak(priSlotStr, 'end');
 
 			wndInfo += priSlotStr;
 
 			secdSlotStr = "Secondary Slots: " + String(finalSecondaries);
-			secdSlotStr = addXShift(secdSlotStr, 5);
-			secdSlotStr = addBreak(secdSlotStr, 'end');
+			secdSlotStr = LMPGamesCore.functions.addXShift(secdSlotStr, 5);
+			secdSlotStr = LMPGamesCore.functions.addBreak(secdSlotStr, 'end');
 
 			wndInfo += secdSlotStr;
 
@@ -3750,26 +3740,13 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 			let text = infoFormat.format(title, wndInfo, "", "", "", "");
 			let textState = {};
 
-			if (totalText.length > 0){
+			if (totalText.length > 0) {
 				textState = { index: 0 };
 				textState.originalText = text;
 				textState.text = this.convertEscapeCharacters(text);
 				let convertedTextHeight = this.calcTextHeight(textState, true);
 				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-				if (bEnableWordwrap) {
-					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-					var multi2 =  6;
-					let multi3 = (txtLen >= 600 ? 4 : 10);
-					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-					this._allTextHeight += this._allTextHeight * 0.25;
-					let numOfBreaks = text.match(/<br>/g).length;
-					this._allTextHeight += numOfBreaks * 15;
-				} else {
-					this._allTextHeight = 2;
-				}
-
+				this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, false);
 				this.createContents();
 				this.drawTextEx(text, 0, 0);
 			}
@@ -3777,7 +3754,7 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 	}
 }
 
-Window_SchoolLimits.prototype.refresh = function() {
+Window_SchoolLimits.prototype.refresh = function(){
 	this.contents.clear();
 	this.buildInfo();
 }
@@ -3820,12 +3797,12 @@ Window_SchoolCost.prototype.numVisibleRows = function() { return 3; }
 Window_SchoolCost.prototype.setMode = function(newMode, selAct, selSchType, selSchId, selTreeId, selSkId) {
 	this._mode = newMode;
 
-	if (this._mode != -1){
+	if (this._mode != -1) {
 		this._selectedActor = selAct;
 		this._selectedSchoolType = (selSchType ? (selSchType.length > 0 ? selSchType[0] : -1) : -1);
 		this._selectedSchoolId = (selSchId ? (selSchId.length > 0 ? selSchId[0] : -1) : -1);
 
-		if (this._mode == 1){
+		if (this._mode == 1) {
 			this._selectedTreeId = (selTreeId ? (selTreeId.length > 0 ? selTreeId[0] : -1) : -1);
 			this._selectedSkillId = (selSkId ? (selSkId.length > 0 ? selSkId[0] : -1) : -1);
 		}
@@ -3834,12 +3811,12 @@ Window_SchoolCost.prototype.setMode = function(newMode, selAct, selSchType, selS
 	this.refresh();
 }
 
-Window_SchoolCost.prototype.itemHeight = function() {
+Window_SchoolCost.prototype.itemHeight = function(){
 	let clientHeight = this._height - this.padding * 2;
 	return Math.floor(clientHeight / this.numVisibleRows());
 }
 
-Window_SchoolCost.prototype.itemWidth = function() {
+Window_SchoolCost.prototype.itemWidth = function(){
 	return Math.floor((this._width - this.padding * 2 +
 				this.spacing()) / this.maxCols() - this.spacing());
 }
@@ -3876,34 +3853,34 @@ Window_SchoolCost.prototype.drawInfo = function(){
 			let titlePos = Math.floor(halfWndW - (titleLen/1.5));
 
 			titlePos = Math.floor((titlePos < 0 ? (titlePos) * -1 : titlePos));
-			title = addXShift(title, titlePos);
-			title = changeFontSize(title, 26);
-			title = addBreak(title, 'end');
+			title = LMPGamesCore.functions.addXShift(title, titlePos);
+			title = LMPGamesCore.functions.changeFontSize(title, 26);
+			title = LMPGamesCore.functions.addBreak(title, 'end');
 
 			if (this._mode == 0) {
-				if (bEnableGoldCost){
-					goldCost = calculateSchoolGoldCost(
+				if (bEnableGoldCost) {
+					goldCost = lmpGamesMagicSchools_CalculateSchoolGoldCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
 						schoolIds
 					);
 
-					if (goldCost > 0){
+					if (goldCost > 0) {
 						gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
 						wndInfo += gldCostInfo;
 					}
 				}
 
 				if (bEnableItemCost){
-					itemCost = calculateSchoolItemCost(
+					itemCost = lmpGamesMagicSchools_CalculateSchoolItemCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
 						schoolIds
 					);
 
-					costItemId = getSchoolCostItemId(this._selectedSchoolId);
+					costItemId = lmpGamesMagicSchools_GetSchoolCostItemId(this._selectedSchoolId);
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (itemCost > 0 && dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
@@ -3924,7 +3901,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 					}
 
 					if (bEnableGoldCost){
-						goldCost = calculateSkillGoldCost(
+						goldCost = lmpGamesMagicSchools_CalculateSkillGoldCost(
 							schoolType,
 							schoolPriConfig,
 							schoolSecdConfig,
@@ -3940,7 +3917,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 					}
 
 					if (bEnableItemCost){
-						itemCost = calculateSkillItemCost(
+						itemCost = lmpGamesMagicSchools_CalculateSkillItemCost(
 							schoolType,
 							schoolPriConfig,
 							schoolSecdConfig,
@@ -3949,7 +3926,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 							this._selectedSchoolId
 						);
 
-						costItemId = getSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+						costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
 						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 						if (itemCost > 0 && dataItm){
 							currPrtyItems = $gameParty.numItems(dataItm);
@@ -3972,20 +3949,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 				textState.text = this.convertEscapeCharacters(text);
 				let convertedTextHeight = this.calcTextHeight(textState, true);
 				this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-				if (bEnableWordwrap) {
-					var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-					var multi2 =  6;
-					let multi3 = (txtLen >= 600 ? 4 : 10);
-					var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-					this._allTextHeight += this._allTextHeight * 0.25;
-					let numOfBreaks = text.match(/<br>/g).length;
-					this._allTextHeight += numOfBreaks * 15;
-				} else {
-					this._allTextHeight = 2;
-				}
-
+				this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, false);
 				this.createContents();
 				this.drawTextEx(text, 0, 0);
 			}
@@ -3999,31 +3963,31 @@ Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt
 		reqString = TextManager.currencyUnit + ": " + String(cost);
 
 		if (currAmt < cost) {
-			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+			reqString = LMPGamesCore.functions.changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	} else if (typ == "item") {
-		let finalName = getDisplayName(this._width, itmData, this.contents);
+		let finalName = LMPGamesCore.functions.getDisplayName(this._width, itmData, this.contents);
 		reqString = "\\i[" + itmData.iconIndex + "]" + finalName + " x" + String(cost);
 
 		if (currAmt < cost){
-			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+			reqString = LMPGamesCore.functions.changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	} else if (typ == "level") {
 		reqString = "Level: " + String(cost);
 
 		if (currAmt < cost){
-			reqString = changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
+			reqString = LMPGamesCore.functions.changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	}
 
-	reqString = changeFontSize(reqString, 24);
-	reqString = addXShift(reqString, 5);
-	reqString = addBreak(reqString, 'end');
+	reqString = LMPGamesCore.functions.changeFontSize(reqString, 24);
+	reqString = LMPGamesCore.functions.addXShift(reqString, 5);
+	reqString = LMPGamesCore.functions.addBreak(reqString, 'end');
 
 	return reqString;
 }
 
-Window_SchoolCost.prototype.drawTextEx = function(text, x, y) {
+Window_SchoolCost.prototype.drawTextEx = function(text, x, y){
 	if (text) {
 		let textState = { index: 0, x: x, y: y, left: x };
 		textState.text = this.convertEscapeCharacters(text);
@@ -4037,7 +4001,7 @@ Window_SchoolCost.prototype.drawTextEx = function(text, x, y) {
 	}
 };
 
-Window_SchoolCost.prototype.refresh = function() {
+Window_SchoolCost.prototype.refresh = function(){
 	this.contents.clear();
 	if (this._mode != -1 && this._selectedActor && this._selectedSchoolId != -1 &&
 			this._selectedTreeId != -1 && this._selectedSkillId != -1){
@@ -4070,7 +4034,6 @@ Window_SchoolInfo.prototype.initialize = function(x, y, w, h){
 
 Window_SchoolInfo.prototype.getHeight = function() { return this._height; }
 Window_SchoolInfo.prototype.getWidth = function() { return this._width; }
-
 Window_SchoolInfo.prototype.setMode = function(newMode) {
 	this._windowMode = newMode;
 	this.refresh();
@@ -4094,17 +4057,17 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 		let actorSecondaries = actSchoolData["SecondarySchools"];
 
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
-		primaryNames = addXShift(primaryNames, 5);
-		primaryNames = addBreak(primaryNames, 'end');
-		secondaryNames = addXShift(secondaryNames, 5);
-		secondaryNames = addBreak(secondaryNames, 'end');
+		primaryNames = LMPGamesCore.functions.addXShift(primaryNames, 5);
+		primaryNames = LMPGamesCore.functions.addBreak(primaryNames, 'end');
+		secondaryNames = LMPGamesCore.functions.addXShift(secondaryNames, 5);
+		secondaryNames = LMPGamesCore.functions.addBreak(secondaryNames, 'end');
 		if (Object.keys(actorPrimaries).length > 0){
 			for (let key of Object.keys(actorPrimaries)){
 				let currSchool = actorPrimaries[key];
 				let schoolName = currSchool.Name;
 				
-				schoolName = addXShift(schoolName, 25);
-				schoolName = addBreak(schoolName, 'end');
+				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
+				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
 			}
 
@@ -4119,8 +4082,8 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 				let currSchool = actorSecondaries[key];
 				let schoolName = currSchool.Name;
 				
-				schoolName = addXShift(schoolName, 25);
-				schoolName = addBreak(schoolName, 'end');
+				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
+				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
 			}
 
@@ -4136,19 +4099,7 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 			textState.text = this.convertEscapeCharacters(text);
 			let convertedTextHeight = this.calcTextHeight(textState, true);
 			this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-			if (bEnableWordwrap) {
-				var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-				var multi2 =  8;
-				let multi3 = (txtLen >= 600 ? 4 : 10);
-				var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-				this._allTextHeight *= multi/2;
-				this._allTextHeight = Math.pow(2, Math.round(Math.log(this._allTextHeight) / Math.log(2)));
-			} else {
-				this._allTextHeight = 2;
-			}
-
+			this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, false);
 			this.createContents();
 			this.drawTextEx(text, 0, 0);
 		}
@@ -4168,14 +4119,14 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		let treeNames = "";
 		let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
 
-		title = addXShift(title, 5);
-		title = addBreak(title, 'end');
+		title = LMPGamesCore.functions.addXShift(title, 5);
+		title = LMPGamesCore.functions.addBreak(title, 'end');
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 		for (let key of Object.keys(globalTrees)){
 			let currTree = globalTrees[key];
 			let treeName = currTree.Name;
-			treeName = addXShift(treeName, 25);
-			treeName = addBreak(treeName, 'end');
+			treeName = LMPGamesCore.functions.addXShift(treeName, 25);
+			treeName = LMPGamesCore.functions.addBreak(treeName, 'end');
 			
 			treeNames += treeName;
 		}
@@ -4188,20 +4139,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		textState.text = this.convertEscapeCharacters(text);
 		let convertedTextHeight = this.calcTextHeight(textState, true);
 		this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-		if (bEnableWordwrap) {
-			var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-			var multi2 =  6;
-			let multi3 = (txtLen >= 600 ? 4 : 10);
-			var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-			this._allTextHeight += this._allTextHeight * 0.25;
-			let numOfBreaks = text.match(/<br>/g).length;
-			this._allTextHeight += numOfBreaks * 15;
-		} else {
-			this._allTextHeight = 2;
-		}
-
+		this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, false);
 		this.createContents();
 		this.drawTextEx(text, 0, 0);
 	}
@@ -4218,8 +4156,8 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 		let totalText = "";
 		let spellNames = "Tree Spells:";
 
-		spellNames = addXShift(spellNames, 5);
-		spellNames = addBreak(spellNames, 'end');
+		spellNames = LMPGamesCore.functions.addXShift(spellNames, 5);
+		spellNames = LMPGamesCore.functions.addBreak(spellNames, 'end');
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
 		let globalTree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
@@ -4267,8 +4205,8 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 
 			if (spellListDispMode == 0){
 				let spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")" + (isLearned ? ' - Learned' : '');
-				spellName = addXShift(spellName, 25);
-				spellName = addBreak(spellName, 'end');
+				spellName = LMPGamesCore.functions.addXShift(spellName, 25);
+				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
 			} else if (spellListDispMode == 1) {
 				let spellName = "";
@@ -4279,29 +4217,30 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
 
 					if (!$magicSchools.skillData[skill.id].CanLearn) {
-						spellName = changeTextColor(spellName, 'both', 8, 0);
+						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
 					}
 				}
 
-				spellName = addXShift(spellName, 25);
-				spellName = addBreak(spellName, 'end');
+				spellName = LMPGamesCore.functions.addXShift(spellName, 25);
+				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
-
 			} else if (spellListDispMode == 2){
 				let spellName = "";
+				LMPGamesCore.functions.setObfuscationChar(obfuscationChar);
+				LMPGamesCore.functions.setMaxObfuscationChars(maxObfuscationChars);
 
 				if (isLearned) {
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ") - Learned";
 				} else {
 					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
 					if (!$magicSchools.skillData[skill.id].CanLearn) {
-						spellName = obfuscateText(text);
-						spellName = changeTextColor(spellName, 'both', 8, 0);
+						spellName = LMPGamesCore.functions.obfuscateText(text);
+						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
 					}
 				}
 
-				spellName = addXShift(spellName, 25);
-				spellName = addBreak(spellName, 'end');
+				spellName = LMPGamesCore.functions.addXShift(spellName, 25);
+				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
 			}
 		}
@@ -4314,20 +4253,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 		textState.text = this.convertEscapeCharacters(text);
 		let convertedTextHeight = this.calcTextHeight(textState, true);
 		this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-		if (bEnableWordwrap) {
-			var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-			var multi2 =  6;
-			let multi3 = (txtLen >= 600 ? 4 : 10);
-			var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-			this._allTextHeight += this._allTextHeight * 0.25;
-			let numOfBreaks = text.match(/<br>/g).length;
-			this._allTextHeight += numOfBreaks * 15;
-		} else {
-			this._allTextHeight = 2;
-		}
-
+		this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, false);
 		this.createContents();
 		this.drawTextEx(text, 0, 0);
 	}
@@ -4354,142 +4280,141 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
 		name = currSkill.name;
-		name = addBreak(name, 'end');
+		name = LMPGamesCore.functions.addBreak(name, 'end');
 		if (currSkill.description.length > 0){
 			desc = currSkill.description;
-			desc = addBreak(desc, 'end');
-			desc = addBreak(desc, 'end');
+			desc = LMPGamesCore.functions.addBreak(desc, 'end');
+			desc = LMPGamesCore.functions.addBreak(desc, 'end');
 		} else {
-			name = addBreak(name, 'end');
+			name = LMPGamesCore.functions.addBreak(name, 'end');
 		}
 
 		//Misc Skl Info Section
 		miscSkInfo = "Magic School: " + $dataSystem.elements[currSkill.damage.elementId];
-		miscSkInfo = addXShift(miscSkInfo, 5);
-		miscSkInfo = addBreak(miscSkInfo, 'end');
+		miscSkInfo = LMPGamesCore.functions.addXShift(miscSkInfo, 5);
+		miscSkInfo = LMPGamesCore.functions.addBreak(miscSkInfo, 'end');
 
 		let useOccasion = "Use Occasion: " + occLst[skillData.occ];
-		useOccasion = addXShift(useOccasion, 5);
-		useOccasion = addBreak(useOccasion, 'end');
+		useOccasion = LMPGamesCore.functions.addXShift(useOccasion, 5);
+		useOccasion = LMPGamesCore.functions.addBreak(useOccasion, 'end');
 
 		miscSkInfo += useOccasion;
 
 		if (skillData.mpCost > 0) {
 			let mpCost = "MP Cost: " + skillData.mpCost;
-			mpCost = addXShift(mpCost, 5);
-			mpCost = addBreak(mpCost, 'end');
+			mpCost = LMPGamesCore.functions.addXShift(mpCost, 5);
+			mpCost = LMPGamesCore.functions.addBreak(mpCost, 'end');
 
 			miscSkInfo += mpCost;
 		}
 
 		if (skillData.tpCost > 0) {
 			let tpCost = "TP Cost: " + skillData.tpCost;
-			tpCost = addXShift(tpCost, 5);
-			tpCost = addBreak(tpCost, 'end');
+			tpCost = LMPGamesCore.functions.addXShift(tpCost, 5);
+			tpCost = LMPGamesCore.functions.addBreak(tpCost, 'end');
 
 			miscSkInfo += tpCost;
 		}
 
 		if (skillData.tpGain > 0) {
 			let tpGain = "Gain " + String(skillData.tpGain) + " TP on use";
-			tpGain = addXShift(tpGain, 5);
-			tpGain = addBreak(tpGain, 'end');
+			tpGain = LMPGamesCore.functions.addXShift(tpGain, 5);
+			tpGain = LMPGamesCore.functions.addBreak(tpGain, 'end');
 
 			miscSkInfo += tpGain;
 		}
 
 		if (skillData.scope > 0) {
 			let scope = "Scope: " + scopeLst[skillData.scope];
-			scope = addXShift(scope, 5);
-			scope = addBreak(scope, 'end');
+			scope = LMPGamesCore.functions.addXShift(scope, 5);
+			scope = LMPGamesCore.functions.addBreak(scope, 'end');
 
 			miscSkInfo += scope;
 		}
 
-		miscSkInfo = addBreak(miscSkInfo, 'end');
-
+		miscSkInfo = LMPGamesCore.functions.addBreak(miscSkInfo, 'end');
 
 		//Invocation Section Info
 		invSkInfo = "Invocation Details:";
-		invSkInfo = addXShift(invSkInfo, 5);
-		invSkInfo = addBreak(invSkInfo, 'end');
+		invSkInfo = LMPGamesCore.functions.addXShift(invSkInfo, 5);
+		invSkInfo = LMPGamesCore.functions.addBreak(invSkInfo, 'end');
 
 		let evasionType = "Evasion Type: " + hitTypLst[skillData.hitType];
-		evasionType = addXShift(evasionType, 25);
-		evasionType = addBreak(evasionType, 'end');
+		evasionType = LMPGamesCore.functions.addXShift(evasionType, 25);
+		evasionType = LMPGamesCore.functions.addBreak(evasionType, 'end');
 
 		invSkInfo += evasionType;
 
 		if (skillData.delay > 0) {
 			let delay = "Delay: " + skillData.delay;
-			delay = addXShift(delay, 25);
-			delay = addBreak(delay, 'end');
+			delay = LMPGamesCore.functions.addXShift(delay, 25);
+			delay = LMPGamesCore.functions.addBreak(delay, 'end');
 
 			invSkInfo += delay;
 		}
 
 		if (skillData.success > 0) {
 			let hitChance = "Hit Chance: " + skillData.success;
-			hitChance = addXShift(hitChance, 25);
-			hitChance = addBreak(hitChance, 'end');
+			hitChance = LMPGamesCore.functions.addXShift(hitChance, 25);
+			hitChance = LMPGamesCore.functions.addBreak(hitChance, 'end');
 
 			invSkInfo += hitChance;
 		}
 
 		if (skillData.repeats > 1) {
 			let repeatNum = "Repeats " + skillData.repeats + " times";
-			repeatNum = addXShift(repeatNum, 25);
-			repeatNum = addBreak(repeatNum, 'end');
+			repeatNum = LMPGamesCore.functions.addXShift(repeatNum, 25);
+			repeatNum = LMPGamesCore.functions.addBreak(repeatNum, 'end');
 
 			invSkInfo += repeatNum;
 		}
 
-		invSkInfo = addBreak(invSkInfo, 'end');
+		invSkInfo = LMPGamesCore.functions.addBreak(invSkInfo, 'end');
 
 		//Damage Section Info
 		if (skillData.damage.type != 0){
 			dmgSkInfo = "Damage Information:";
-			dmgSkInfo = addXShift(dmgSkInfo, 5);
-			dmgSkInfo = addBreak(dmgSkInfo, 'end');
+			dmgSkInfo = LMPGamesCore.functions.addXShift(dmgSkInfo, 5);
+			dmgSkInfo = LMPGamesCore.functions.addBreak(dmgSkInfo, 'end');
 
 			let dmgType = "Damage Type: " + dmgTypLst[skillData.damage.type];
-			dmgType = addXShift(dmgType, 25);
-			dmgType = addBreak(dmgType, 'end');
+			dmgType = LMPGamesCore.functions.addXShift(dmgType, 25);
+			dmgType = LMPGamesCore.functions.addBreak(dmgType, 'end');
 
 			dmgSkInfo += dmgType;
-
 			if (skillData.damage.elementId > 0) {
 				let dmgElement = "Damage Element: " + $dataSystem.elements[skillData.damage.elementId];
-				dmgElement = addXShift(dmgElement, 25);
-				dmgElement = addBreak(dmgElement, 'end');
+				dmgElement = LMPGamesCore.functions.addXShift(dmgElement, 25);
+				dmgElement = LMPGamesCore.functions.addBreak(dmgElement, 'end');
 
 				dmgSkInfo += dmgElement;
 			}
 
 			if (skillData.damage.variance > 0) {
 				let dmgVariance = "Damage Variance: " + skillData.damage.variance + "%";
-				dmgVariance = addXShift(dmgVariance, 25);
-				dmgVariance = addBreak(dmgVariance, 'end');
+				dmgVariance = LMPGamesCore.functions.addXShift(dmgVariance, 25);
+				dmgVariance = LMPGamesCore.functions.addBreak(dmgVariance, 'end');
 
 				dmgSkInfo += dmgVariance;
 			}
 
 			if (skillData.damage.critical) {
 				let dmgCrit = "Can Critical";
-				dmgCrit = addXShift(dmgCrit, 25);
-				dmgCrit = addBreak(dmgCrit, 'end');
+				dmgCrit = LMPGamesCore.functions.addXShift(dmgCrit, 25);
+				dmgCrit = LMPGamesCore.functions.addBreak(dmgCrit, 'end');
 
 				dmgSkInfo += dmgCrit;
 			}
 
-			dmgSkInfo = addBreak(dmgSkInfo, 'end');
+			dmgSkInfo = LMPGamesCore.functions.addBreak(dmgSkInfo, 'end');
 		}
 
 		let bHasEffects = false;
 		if (!hasNoEffects(skillData.effects)){
+			let bObfuscated = (spellListDispMode == 2 ? true : false);
+			let displayEffects = LMPGamesCore.functions.buildEffectList(skillData.effects);
 			bHasEffects = true;
-			let displayEffects = buildEffectList(skillData.effects);
-			effSkInfo = this.generateEffectStr(displayEffects);
+			effSkInfo = LMPGamesCore.functions.generateEffectStr(displayEffects, bObfuscated);
 		}
 
 		totalText = totalText.concat(name, desc, miscSkInfo, invSkInfo, dmgSkInfo, effSkInfo, "", "");
@@ -4500,142 +4425,18 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		textState.text = this.convertEscapeCharacters(text);
 		let convertedTextHeight = this.calcTextHeight(textState, true);
 		this._allTextHeight = (convertedTextHeight > 600 ? convertedTextHeight / 2 : convertedTextHeight);
-
-		if (bEnableWordwrap) {
-			var txtLen = (this._allTextHeight == 0 ? 300 : this._allTextHeight);
-			var multi2 =  6;
-			let multi3 = (txtLen >= 600 ? 4 : 10);
-			var multi = Math.ceil((txtLen * multi2) / (Graphics.width - (this._width + multi3)));
-
-			this._allTextHeight += this._allTextHeight * 0.25;
-			let numOfBreaks = text.match(/<br>/g).length;
-			this._allTextHeight += (numOfBreaks * 15) - (!bHasEffects ? (text.length / 1.25) : 0);
-		} else {
-			this._allTextHeight = 2;
-		}
-
+		this._allTextHeight = LMPGamesCore.functions.getCalculatedTextHeight(bEnableWordwrap, this._allTextHeight, this._width, text, bHasEffects);
 		this.createContents();
 		this.drawTextEx(text, 0, 0);
 	}
 }
 
-Window_SchoolInfo.prototype.generateEffectStr = function(effects){
-	let effectStr = "Effects:";
-	effectStr = addXShift(effectStr, 5);
-	effectStr = addBreak(effectStr, 'end');
-
-	effStates = effects.states;
-	effBuffs = effects.buffs;
-	effRmvBuffs = effects.rmvbuffs;
-	effRmvDebuffs = effects.rmvdebuffs;
-	effGrowth = effects.growth;
-	effSpecEff = effects.speceffs;
-	effComEvts = effects.comevts;
-	effHPRecov = effects.hpRecov;
-	effMPRecov = effects.mpRecov;
-	effTPRecov = effects.tpRecov;
-	effLrnSkills = effects.skills;
-
-	if (effStates.length > 0) {
-		let effectStateStr = this.buildDataList("States:", effStates, 25, 35);
-		effectStr += effectStateStr;
-	}
-
-	if (effBuffs.length > 0) {
-		let effectBuffStr = this.buildDataList("Buffs:", effBuffs, 25, 35);
-		effectStr += effectBuffStr;
-	}
-
-	if (effRmvBuffs.length > 0) {
-		let effectRmvBuffStr = this.buildDataList("Remove Buffs:", effRmvBuffs, 25, 35);
-		effectStr += effectRmvBuffStr;
-	}
-
-	if (effRmvDebuffs.length > 0) {
-		let effectRmvDebuffStr = this.buildDataList("Remove Debuffs:", effRmvDebuffs, 25, 35);
-		effectStr += effectRmvDebuffStr;
-	}
-
-	if (effSpecEff.length > 0){
-		let effectSpecialStr = this.buildDataList("Special Effects:", effSpecEff, 25, 35);
-		effectStr += effectSpecialStr;
-	}
-
-	if (effGrowth.length > 0){
-		let effectGrowthStr = this.buildDataList("Growth Effects:", effGrowth, 25, 35);
-		effectStr += effectGrowthStr;
-	}
-
-	if (effComEvts.length > 0 && bDebugModeEnabled){
-		let effectCommonEvsStr = this.buildDataList("Common Events:", effComEvts, 25, 35);
-		effectStr += effectCommonEvsStr;
-	}
-
-	if (effHPRecov.length > 0 || effMPRecov.length > 0 || effTPRecov.length > 0) {
-		let effectRecovStr = "Recovery:";
-		effectRecovStr = addXShift(effectRecovStr, 25);
-		effectRecovStr = addBreak(effectRecovStr, 'end');
-
-		if (effHPRecov.length > 0){
-			let effectHPRecovStr = this.buildDataList("HP:", effHPRecov, 35, 45);
-			effectRecovStr += effectHPRecovStr;
-		}
-
-		if (effMPRecov.length > 0){
-			let effectMPRecovStr = this.buildDataList("MP:", effMPRecov, 35, 45);
-			effectRecovStr += effectMPRecovStr;
-		}
-
-		if (effTPRecov.length > 0){
-			let effectTPRecovStr = this.buildDataList("TP:", effTPRecov, 35, 45);
-			effectRecovStr += effectTPRecovStr;
-		}
-
-		effectStr += effectRecovStr;
-	}
-
-	if (effLrnSkills.length > 0) {
-		let effectSkillStr = this.buildDataList("Skills:", effLrnSkills, 25, 35);
-		effectStr += effectSkillStr;
-	}
-
-	return effectStr;
-}
-
-Window_SchoolInfo.prototype.buildDataList = function(dataTitle, data, titleXShift, dataXShift, dataYShift){
-	let builtStr = "";
-
-	if (dataTitle.length > 0){
-		dataTitle = addXShift(dataTitle, titleXShift);
-		dataTitle = addBreak(dataTitle, 'end');
-	}
-
-	let dataStr = "";
-	for (let i1 = 0; i1 < data.length; i1++){
-		let newData = "";		
-		newData += data[i1];
-		newData = addXShift(newData, dataXShift);
-		newData = addBreak(newData, 'end');
-
-		dataStr += newData;
-	}
-
-	if (dataTitle.length > 0) {
-		dataStr = addBreak(dataStr, 'end');
-	}
-
-	builtStr = (dataTitle.length > 0 ? dataTitle : "");
-	builtStr += dataStr;
-	return builtStr;
-}
-
-Window_SchoolInfo.prototype.refresh = function() {
+Window_SchoolInfo.prototype.refresh = function(){
 	if (this._countdown > 0) { return; }
 	this.contents.clear();
 	this._lastOriginY = -200;
 	this.origin.y = 0;
 	this._allTextHeight = 0;
-
 	let actSchoolData = this._selectedActor._magicSchoolsData;
 
 	if (actSchoolData && Object.keys(actSchoolData).length > 0){
@@ -4661,88 +4462,89 @@ Window_SchoolInfo.prototype.updateMode = function(mode, actorData, selectedSchoo
 	this.refresh();
 }
 
-Window_SchoolInfo.prototype.contentsHeight = function() {
-var standard = this.height - this.standardPadding() * 2;
-return Math.max(standard, this._allTextHeight);
+Window_SchoolInfo.prototype.contentsHeight = function(){
+	var standard = this.height - this.standardPadding() * 2;
+	return Math.max(standard, this._allTextHeight);
 };
 
-Window_SchoolInfo.prototype.updateCountdown = function() {
-if (this._countdown > 0) {
-	this._countdown -= 1;
-	if (this._countdown <= 0) this.refresh();
-}
+Window_SchoolInfo.prototype.updateCountdown = function(){
+	if (this._countdown > 0) {
+		this._countdown -= 1;
+		if (this._countdown <= 0) { this.refresh(); }
+	}
 };
 
-Window_SchoolInfo.prototype.scrollSpeed = function() {
-if (this._scrollSpeed === undefined) {
-	this._scrollSpeed = 5;
-}
-return this._scrollSpeed;
+Window_SchoolInfo.prototype.scrollSpeed = function(){
+	if (this._scrollSpeed === undefined) {
+		this._scrollSpeed = 5;
+	}
+	
+	return this._scrollSpeed;
 };
 
-Window_SchoolInfo.prototype.scrollOriginDown = function(speed) {
-var value = this.contentsHeight() - this.height +
-	this.standardPadding() * 2;
-this.origin.y = Math.min(value, this.origin.y + speed);
+Window_SchoolInfo.prototype.scrollOriginDown = function(speed){
+	var value = this.contentsHeight() - this.height +
+		this.standardPadding() * 2;
+	this.origin.y = Math.min(value, this.origin.y + speed);
 };
 
-Window_SchoolInfo.prototype.scrollOriginUp = function(speed) {
-this.origin.y = Math.max(0, this.origin.y - speed);
+Window_SchoolInfo.prototype.scrollOriginUp = function(speed){
+	this.origin.y = Math.max(0, this.origin.y - speed);
 };
 
-Window_SchoolInfo.prototype.update = function() {
-Window_Selectable.prototype.update.call(this);
-this.updateCountdown();
-if (this.isOpenAndActive()) this.updateKeyScrolling();
+Window_SchoolInfo.prototype.update = function(){
+	Window_Selectable.prototype.update.call(this);
+	this.updateCountdown();
+	if (this.isOpenAndActive()) this.updateKeyScrolling();
 };
 
-Window_SchoolInfo.prototype.updateKeyScrolling = function() {
-if (Input.isPressed('up')) {
-	this.scrollOriginUp(this.scrollSpeed());
-} else if (Input.isPressed('down')) {
-	this.scrollOriginDown(this.scrollSpeed());
-} else if (Input.isPressed('pageup')) {
-	this.scrollOriginUp(this.scrollSpeed() * 4);
-} else if (Input.isPressed('pagedown')) {
-	this.scrollOriginDown(this.scrollSpeed() * 4);
-}
+Window_SchoolInfo.prototype.updateKeyScrolling = function(){
+	if (Input.isPressed('up')) {
+		this.scrollOriginUp(this.scrollSpeed());
+	} else if (Input.isPressed('down')) {
+		this.scrollOriginDown(this.scrollSpeed());
+	} else if (Input.isPressed('pageup')) {
+		this.scrollOriginUp(this.scrollSpeed() * 4);
+	} else if (Input.isPressed('pagedown')) {
+		this.scrollOriginDown(this.scrollSpeed() * 4);
+	}
 };
 
-Window_SchoolInfo.prototype.updateArrows = function() {
-if (this._lastOriginY === this.origin.y) return;
-this.showArrows();
+Window_SchoolInfo.prototype.updateArrows = function(){
+	if (this._lastOriginY === this.origin.y) return;
+	this.showArrows();
 };
 
-Window_SchoolInfo.prototype.showArrows = function() {
-this._lastOriginY = this.origin.y;
-this.upArrowVisible = this.origin.y !== 0;
-this.downArrowVisible = this.origin.y !== this.contentsHeight() -
-	this.height + this.standardPadding() * 2;
+Window_SchoolInfo.prototype.showArrows = function(){
+	this._lastOriginY = this.origin.y;
+	this.upArrowVisible = this.origin.y !== 0;
+	this.downArrowVisible = this.origin.y !== this.contentsHeight() -
+		this.height + this.standardPadding() * 2;
 };
 
-Window_SchoolInfo.prototype.hideArrows = function() {
-this.upArrowVisible = false;
-this.downArrowVisible = false;
+Window_SchoolInfo.prototype.hideArrows = function(){
+	this.upArrowVisible = false;
+	this.downArrowVisible = false;
 };
 
-Window_SchoolInfo.prototype.isInsideFrame = function() {
-var x = this.canvasToLocalX(TouchInput._mouseOverX);
-var y = this.canvasToLocalY(TouchInput._mouseOverY);
-return x >= 0 && y >= 0 && x < this._width && y < this._height;
+Window_SchoolInfo.prototype.isInsideFrame = function(){
+	var x = this.canvasToLocalX(TouchInput._mouseOverX);
+	var y = this.canvasToLocalY(TouchInput._mouseOverY);
+	return x >= 0 && y >= 0 && x < this._width && y < this._height;
 };
 
-Window_SchoolInfo.prototype.processWheel = function() {
-if (!this.isInsideFrame()) { return; }
-var threshold = 20;
-if (TouchInput.wheelY >= threshold) {
-	this.scrollOriginDown(this.scrollSpeed() * 4);
-}
+Window_SchoolInfo.prototype.processWheel = function(){
+	if (!this.isInsideFrame()) { return; }
+	
+	var threshold = 20;
+	if (TouchInput.wheelY >= threshold) {
+		this.scrollOriginDown(this.scrollSpeed() * 4);
+	}
 
-if (TouchInput.wheelY <= -threshold) {
-	this.scrollOriginUp(this.scrollSpeed() * 4);
-}
+	if (TouchInput.wheelY <= -threshold) {
+		this.scrollOriginUp(this.scrollSpeed() * 4);
+	}
 };
-
 
 
 /* Window_SchoolCommand Functions */
@@ -4760,7 +4562,7 @@ Window_SchoolCommand.prototype.initialize = function(x, y, w, h){
 	this.refresh();
 }
 
-Window_SchoolCommand.prototype.setMode = function(wndMode) {
+Window_SchoolCommand.prototype.setMode = function(wndMode){
 	this._selectedMode = wndMode;
 	this.refresh();
 }
@@ -4775,8 +4577,6 @@ Window_SchoolCommand.prototype.standardFontSize = function() { return 28; }
 Window_SchoolCommand.prototype.maxCols = function() { return 2; }
 Window_SchoolCommand.prototype.findIdxSymbol = function(idx) { return (idx !== -1 && idx < this._list.length ? this._list[idx].symbol : 'cancel'); }
 Window_SchoolCommand.prototype.getHeight = function() { return this._height; }
-
-
 Window_SchoolCommand.prototype.makeCommandList = function(){
 	this._list = [];
 	if (this._selectedMode == 0){
@@ -4808,407 +4608,13 @@ Window_SchoolCommand.prototype.processOk = function(){
 	}
 }
 
-
 /* Utility Functions */
-function buildEffectList(effects){
-	var tempObj = {
-		"hpRecov" : [],
-		"mpRecov" : [],
-		"tpRecov": [],
-		"states" : [],
-		"parms" : [],
-		"buffs" : [],
-		"rmvbuffs" : [],
-		"rmvdebuffs": [],
-		"growth" : [],
-		"skills" : [],
-		"speceffs" : [],
-		"comevts" : []
-	};
-
-	var hpRecov = [];
-	var mpRecov = [];
-	var tpRecov = [];
-	var states = [];
-	var parms = [];
-	var buffs = [];
-	var rmvbuffs = [];
-	var rmvdebuffs = [];
-	var growth = [];
-	var skls = [];
-	var speceffs = [];
-	var comevts = [];
-
-	if (effects.length > 0) {effects = orderEffects(effects); }
-
-	for (var i1 = 0; i1 < effects.length; i1++){
-		if (effects[i1].code == 11){ //Recov HP
-			hpRecov.push(effects[i1]);
-		} else if (effects[i1].code == 12){ //Recov MP
-			mpRecov.push(effects[i1]);
-		} else if (effects[i1].code == 13){ //Recov TP
-			tpRecov.push(effects[i1]);
-		} else if (effects[i1].code == 21){ //Add State
-			states.push(effects[i1]);
-		} else if (effects[i1].code == 22){ //Remove State
-			states.push(effects[i1]);
-		}else if (effects[i1].code == 31){ //Add Parm Buff
-			buffs.push(effects[i1]);
-		} else if (effects[i1].code == 32){ //Add Parm Debuff
-			buffs.push(effects[i1]);
-		}else if (effects[i1].code == 33){ //Remove Parm Buff
-			rmvbuffs.push(effects[i1]);
-		} else if (effects[i1].code == 34){ //Remove Parm Debuff
-			rmvdebuffs.push(effects[i1]);
-		} else if (effects[i1].code == 41){ //Spec Eff
-			speceffs.push(effects[i1]);
-		} else if (effects[i1].code == 42){ //Stat Growth
-			growth.push(effects[i1]);
-		} else if (effects[i1].code == 43){ //Learn Skill
-			skls.push(effects[i1]);
-		} else if (effects[i1].code == 44){ //Common Event
-			comevts.push(effects[i1]);
-		}
-	}
-
-	if (hpRecov.length > 0 ) { tempObj = processHpRecov(hpRecov, tempObj); }
-	if (mpRecov.length > 0 ) { tempObj = processMpRecov(mpRecov, tempObj); }
-	if (tpRecov.length > 0 ) { tempObj = processTpRecov(tpRecov, tempObj); }
-	if (states.length > 0 ) { tempObj = processStates(states, tempObj); }
-	if (buffs.length > 0 ) { tempObj = processBuffs(buffs, tempObj); }
-	if (rmvbuffs.length > 0 ) { tempObj = processRmvBuffs(rmvbuffs, tempObj); }
-	if (rmvdebuffs.length > 0 ) { tempObj = processRmvDebuffs(rmvdebuffs, tempObj); }
-	if (speceffs.length > 0 ) { tempObj = processEffSpecEffs(speceffs, tempObj); }
-	if (growth.length > 0 ) { tempObj = processGrowth(growth, tempObj); }
-	if (skls.length > 0 ) { tempObj = processLrnSkils(skls, tempObj); }
-	if (comevts.length > 0 ) { tempObj = processComEvts(comevts, tempObj); }
-
-	return tempObj;
-}
-
-function processHpRecov(hpRecov, tempObj){
-	for (var i1 = 0; i1 < hpRecov.length; i1++){
-		var rPerc = hpRecov[i1].value1;
-		var rInt = hpRecov[i1].value2;
-		var recovStr = "";
-
-		if (rPerc != 0.0){
-			if(Math.sign(rPerc) == 1){
-				recovStr = "\\c[11]+\\c[0] " + (rPerc * 100) + "% of Max HP";
-			} else if (Math.sign(rPerc) == -1){
-				recovStr = "\\c[18]-\\c[0] " + (rPerc * 100) + "% of Max HP";
-			}
-		}
-
-		if (rInt != 0.0){
-			if (recovStr.length > 0){
-				recovStr += " and ";
-			}
-
-			if(Math.sign(rInt) == 1){
-				recovStr += "\\c[11]+\\c[0] " + rInt + " HP";
-			} else if (Math.sign(rInt) == -1){
-				recovStr += "\\c[18]-\\c[0] " + rInt + " HP";
-			}
-		}
-
-		tempObj.hpRecov.push(recovStr);
-	}
-
-	return tempObj;
-}
-
-function processMpRecov(mpRecov, tempObj){
-	for (var i1 = 0; i1 < mpRecov.length; i1++){
-		var rPerc = mpRecov[i1].value1;
-		var rInt = mpRecov[i1].value2;
-		var recovStr = "";
-
-		if (rPerc != 0.0){
-			if(Math.sign(rPerc) == 1){
-				recovStr = "\\c[11]+\\c[0] " + (rPerc * 100) + "% of Max MP";
-			} else if (Math.sign(rPerc) == -1){
-				recovStr = "\\c[18]-\\c[0] " + (rPerc * 100) + "% of Max MP";
-			}
-		}
-
-		if (rInt != 0.0){
-			if (recovStr.length > 0){
-				recovStr += " and ";
-			}
-
-			if(Math.sign(rInt) == 1){
-				recovStr += "\\c[11]+\\c[0] " + rInt + " MP";
-			} else if (Math.sign(rInt) == -1){
-				recovStr += "\\c[18]-\\c[0] " + rInt + " MP";
-			}
-		}
-
-		tempObj.mpRecov.push(recovStr);
-	}
-
-	return tempObj;
-}
-
-function processTpRecov(tpRecov, tempObj){
-	for (var i1 = 0; i1 < tpRecov.length; i1++){
-		var rPerc = tpRecov[i1].value1;
-		var rInt = tpRecov[i1].value2;
-		var recovStr = "";
-
-		if (rPerc != 0.0){
-			if(Math.sign(rPerc) == 1){
-				recovStr = "\\c[11]+\\c[0] " + (rPerc * 100) + "% of Max TP";
-			} else if (Math.sign(rPerc) == -1){
-				recovStr = "\\c[18]-\\c[0] " + (rPerc * 100) + "% of Max TP";
-			}
-		}
-
-		if (rInt != 0.0){
-			if (recovStr.length > 0){
-				recovStr += " and ";
-			}
-
-			if(Math.sign(rInt) == 1){
-				recovStr += "\\c[11]+\\c[0] " + rInt + " TP";
-			} else if (Math.sign(rInt) == -1){
-				recovStr += "\\c[18]-\\c[0] " + rInt + " TP";
-			}
-		}
-
-		tempObj.tpRecov.push(recovStr);
-	}
-
-	return tempObj;
-}
-
-function processStates(effstates, tempObj){
-	for (var i1 = 0; i1 < effstates.length; i1++){
-		if (effstates[i1].dataId > 0) {
-			var stId = effstates[i1].dataId;
-			var st = $dataStates[stId];
-			var stVal = effstates[i1].value1;
-			var stText = "";
-
-			if (effstates[i1].code == 21){
-				stText = "\\c[11]+\\c[0] \\i[" + st.iconIndex + "] " + st.name + " (" + (stVal * 100) + "%)";
-			} else if (effstates[i1].code == 22){
-				stText = "\\c[18]-\\c[0] \\i[" + st.iconIndex + "] " + st.name + " (" + (stVal * 100) + "%)";
-			}
-
-			tempObj.states.push(stText);
-		}
-	}
-
-	return tempObj;
-}
-
-function processBuffs(buffs, tempObj){
-	for (var i1 = 0; i1 < buffs.length; i1++){
-		var parmId = buffs[i1].dataId;
-		var parmName = staticTraits["21"][parmId];
-		var buffVal = buffs[i1].value1;
-		var buffText = "";
-
-		if (buffs[i1].code == 31){
-			buffText = "\\c[11]+\\c[0] " + parmName + " (" + buffVal + " turns)";
-		} else if (buffs[i1].code == 32){
-			buffText = "\\c[18]-\\c[0] " + parmName + " (" + buffVal + " turns)";
-		}
-
-		tempObj.buffs.push(buffText);
-	}
-
-	return tempObj;
-}
-
-function processRmvBuffs(rmvbuffs, tempObj){
-	for (var i1 = 0; i1 < rmvbuffs.length; i1++){
-		var parmId = rmvbuffs[i1].dataId;
-		var parmName = staticTraits["21"][parmId];
-		var rmvbuffText = "";
-
-		rmvbuffText = "\\c[18]-\\c[0] " + parmName;
-
-		tempObj.rmvbuffs.push(rmvbuffText);
-	}
-
-	return tempObj;
-}
-
-function processRmvDebuffs(rmvdebuffs, tempObj){
-	for (var i1 = 0; i1 < rmvdebuffs.length; i1++){
-		var parmId = rmvdebuffs[i1].dataId;
-		var parmName = staticTraits["21"][parmId];
-		var rmvdebuffText = "";
-
-		rmvdebuffText = "\\c[11]+\\c[0] " + parmName;
-
-		tempObj.rmvdebuffs.push(rmvdebuffText);
-	}
-
-	return tempObj;
-}
-
-function processEffSpecEffs(speceffs, tempObj){
-	for (var i1 = 0; i1 < speceffs.length; i1++){
-		var specEffId = speceffs[i1].dataId;
-		var specEffName = specEffLst[specEffId];
-		var specEffText = "";
-
-		specEffText = "\\c[11]+\\c[0] " + specEffName;
-
-		tempObj.speceffs.push(specEffText);
-	}
-
-	return tempObj;
-}
-
-function processGrowth(growth, tempObj){
-	for (var i1 = 0; i1 < growth.length; i1++){
-		var parmId = growth[i1].dataId;
-		var parmName = staticTraits["21"][parmId];
-		var parmIncVal = growth[i1].value1;
-		var growthText = "";
-
-		growthText = parmName + " \\c[11]+" + parmIncVal + "\\c[0]";
-
-		tempObj.growth.push(growthText);
-	}
-
-	return tempObj;
-}
-
-function processLrnSkils(skls, tempObj){
-	for (var i1 = 0; i1 < skls.length; i1++){
-		var skId = skls[i1].dataId;
-		var sk = $dataSkills[skId];
-		var skText = "";
-
-		skText = "\\c[11]+\\c[0] " + sk.name;
-
-		tempObj.skills.push(skText);
-	}
-
-	return tempObj;
-}
-
-function processComEvts(comevts, tempObj){
-	for (var i1 = 0; i1 < comevts.length; i1++){
-		var ceId = comevts[i1].dataId;
-		var ce = $dataCommonEvents[ceId];
-		var comevtText = "";
-
-		comevtText = "Calls CE: " + ce.name;
-
-		tempObj.comevts.push(comevtText);
-	}
-
-	return tempObj;
-}
-
-function orderEffects(effects){
-	for (var i1 = 0; i1 < effects.length; i1++){
-		for (var i2 = 0; i2 < effects.length; i2++){
-			var e1 = effects[i1];
-			var e2 = effects[i2];
-			var storage;
-
-			if (e1.value > e2.value){
-				storage = e1;
-				effects[i1] = e2;
-				effects[i2] = storage;
-			}
-		}
-	}
-
-	return effects;
-}
-
-function hasNoEffects(entryEffects){
-	let isEmpty = true;
-
-	if (entryEffects == undefined || entryEffects == null){
-		return true;
-	}
-
-	for (var k of Object.keys(entryEffects)){
-		if (Object.values(entryEffects[k]).length > 0){
-			isEmpty = false;
-		}
-	}
-
-	return isEmpty;
-}
-
-function addBreak(text, pos){
-	if (pos == "start"){
-		text = "<br>" + text;
-	} else if (pos == "end"){
-		text += "<br>";
-	} else {
-		text = "<br>" + text + "<br>";
-	}
-
-	return text;
-}
-
-function addXShift(text, shiftAmount){
-	return "\\px[" + String(shiftAmount) +"]" + text;
-}
-
-function addYShift(text, shiftAmount){
-	return "\\py[" + String(shiftAmount) +"]" + text;
-}
-
-function changeFontSize(text, fontSize){
-	return "\\fs[" + String(fontSize) + "]" + text;
-}
-
-function resetFontSize(text){
-	return "\\fr " + text;
-}
-
-function changeTextColor(text, pos, startColor, endColor){
-	if (pos == "start"){
-		text = "\\hc[" + startColor + "]" + text;
-	} else if (pos == "end"){
-		text += "\\hc[" + endColor + "]";
-	} else if (pos == "both"){
-		text = "\\hc[" + startColor + "]" + text + "\\hc[" + endColor + "]";
-	}
-
-	return text;
-}
-
-function obfuscateText(text){
-	let obfuscatedText = "";
-	let stringLen = 0;
-
-	if (maxObfuscationChars == 0){
-		stringLen = text.length;
-	} else {
-		stringLen = maxObfuscationChars
-	}
-
-	for (let i1 = 0; i1 < stringLen; i1++){
-		let char = text[i1];
-		if (char != " "){
-			obfuscatedText += obfuscationChar;
-		} else {
-			obfuscatedText += " ";
-		}
-	}
-
-	return obfuscatedText;
-}
-
-function calculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
+function lmpGamesMagicSchools_CalculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
 	let goldCost = 0;
 	if (schoolType.includes("Primary")){
 		//Additional Pri School
 		if (schoolIds.length > 0){
-			goldCost = getSchoolCost(
+			goldCost = lmpGamesMagicSchools_GetSchoolCost(
 				schoolPriConfig.addtSchBase,
 				schoolPriConfig.addtSchMod,
 				schoolPriConfig.addtSchMulti,
@@ -5217,7 +4623,7 @@ function calculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, 
 			);
 		}
 	} else {
-		goldCost = getSchoolCost(
+		goldCost = lmpGamesMagicSchools_GetSchoolCost(
 			schoolSecdConfig.schBase,
 			schoolSecdConfig.schMod,
 			schoolSecdConfig.schMulti,
@@ -5229,12 +4635,12 @@ function calculateSchoolGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, 
 	return goldCost;
 }
 
-function calculateSchoolItemCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
+function lmpGamesMagicSchools_CalculateSchoolItemCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds){
 	let itemCost = 0;
 	if (schoolType.includes("Primary")){
 		//Additional Pri School
 		if (schoolIds.length > 0){
-			itemCost = getSchoolCost(
+			itemCost = lmpGamesMagicSchools_GetSchoolCost(
 				schoolPriConfig.addtSchItmBase,
 				schoolPriConfig.addtSchItmMod,
 				schoolPriConfig.addtSchItmMulti,
@@ -5243,7 +4649,7 @@ function calculateSchoolItemCost(schoolType, schoolPriConfig, schoolSecdConfig, 
 			);
 		}
 	} else {
-		itemCost = getSchoolCost(
+		itemCost = lmpGamesMagicSchools_GetSchoolCost(
 			schoolSecdConfig.schItmBase,
 			schoolSecdConfig.schItmMod,
 			schoolSecdConfig.schItmMulti,
@@ -5255,18 +4661,18 @@ function calculateSchoolItemCost(schoolType, schoolPriConfig, schoolSecdConfig, 
 	return itemCost;
 }
 
-function calculateSkillGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds, skillData, selectedSchoolId){
+function lmpGamesMagicSchools_CalculateSkillGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds, skillData, selectedSchoolId){
 	let goldCost = 0;
 	if (schoolType.includes("Primary")) {
 		if (schoolIds[0] == selectedSchoolId) { //Init Pri School
-			goldCost = getSpellCost(
+			goldCost = lmpGamesMagicSchools_GetSpellCost(
 				schoolPriConfig.initSchSpellBase,
 				schoolPriConfig.initSchSpellMod,
 				skillData.ReqLevel,
 				schoolPriConfig.initSchSpellCurrForm,
 			);
 		} else { //Additional Pri School
-			goldCost = getSpellCost(
+			goldCost = lmpGamesMagicSchools_GetSpellCost(
 				schoolPriConfig.addtSchSpellBase,
 				schoolPriConfig.addtSchSpellMod,
 				skillData.ReqLevel,
@@ -5274,7 +4680,7 @@ function calculateSkillGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 			);
 		}
 	} else {
-		goldCost = getSpellCost(
+		goldCost = lmpGamesMagicSchools_GetSpellCost(
 			schoolSecdConfig.schSpellBase,
 			schoolSecdConfig.schSpellMod,
 			skillData.ReqLevel,
@@ -5285,11 +4691,11 @@ function calculateSkillGoldCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 	return goldCost;
 }
 
-function calculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds, skillData, selectedSchoolId){
+function lmpGamesMagicSchools_CalculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, schoolIds, skillData, selectedSchoolId){
 	let itemCost = 0;
 	if (schoolType.includes("Primary")) {
 		if (schoolIds[0] == selectedSchoolId) { //Init Pri School
-			itemCost = getSpellCost(
+			itemCost = lmpGamesMagicSchools_GetSpellCost(
 				schoolPriConfig.initSchSpellItmBase,
 				schoolPriConfig.initSchSpellItmMod,
 				skillData.ReqLevel,
@@ -5297,7 +4703,7 @@ function calculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 			);
 
 		} else { //Additional Pri School
-			itemCost = getSpellCost(
+			itemCost = lmpGamesMagicSchools_GetSpellCost(
 				schoolPriConfig.addtSchSpellItmBase,
 				schoolPriConfig.addtSchSpellItmMod,
 				skillData.ReqLevel,
@@ -5305,7 +4711,7 @@ function calculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 			);
 		}
 	} else {
-		itemCost = getSpellCost(
+		itemCost = lmpGamesMagicSchools_GetSpellCost(
 			schoolSecdConfig.schSpellItmBase,
 			schoolSecdConfig.schSpellItmMod,
 			skillData.ReqLevel,
@@ -5316,18 +4722,7 @@ function calculateSkillItemCost(schoolType, schoolPriConfig, schoolSecdConfig, s
 	return itemCost;
 }
 
-function getSchoolCost(baseCost, costMod, schoolMulti, numOfSchools, formula) { return eval(formula); }
-function getSpellCost(baseCost, costMod, skLvl, formula) { return eval(formula); }
-function getSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId); }
-function getSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId)); }
-function getDisplayName(width, data, contents){
-	let finalName = "";
-	let textWidth = contents.measureTextWidth(data.name);
-	if (textWidth > width - 15 && bEnableNameAlias && data.Alias && data.Alias != ""){
-		finalName = data.Alias;
-	} else {
-		finalName = data.name;
-	}
-
-	return finalName;
-}
+function lmpGamesMagicSchools_GetSchoolCost(baseCost, costMod, schoolMulti, numOfSchools, formula) { return eval(formula); }
+function lmpGamesMagicSchools_GetSpellCost(baseCost, costMod, skLvl, formula) { return eval(formula); }
+function lmpGamesMagicSchools_GetSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId); }
+function lmpGamesMagicSchools_GetSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId)); }
