@@ -519,11 +519,13 @@
 * @type Number[]
 */
 
-var LMPGames = LMPGames || {};
+var LMPGamesCore = LMPGamesCore || {};
 const lmpGamesMagicSchoolsParams = PluginManager.parameters('LMPGames_MagicSchools');
-var $magicSchoolsData = {
+LMPGamesCore.pluginData.magicSchools = {
 	"schools" : {},
-	"skillData" : []
+	"skillData" : [],
+	"itemData" : [],
+	"classData" : []
 };
 
 //Window/Scene defines
@@ -555,35 +557,7 @@ var bDataWasLoaded = false;
 var bEnableAutoUnlock = (lmpGamesMagicSchoolsParams['Enable Apell Auto-Unlock']);
 var bEnableNameAlias = (lmpGamesMagicSchoolsParams['Enable Name Aliasing'] === "true");
 
-var occLst = ["Always", "In Battle", "Out of Battle", "Never"];
-var hitTypLst = ["Always Hits", "Normal", "Uses Mag Evasion"];
-var dmgTypLst = ["None","HP Damage", "MP Damage", "Recover HP", "Recover MP", "Drain HP", "Drain MP"];
-var specEffLst = ["Escape"];
-var stScopeList = ["None", "Attack an Enemy", "Attack Anyone", "Attack an Ally", "Cannot Move"];
-var stRmvTimingList = ["None", "After next turn", "After current turn"];
-var scopeLst = [
-	"None","1 Enemy", "All Enemies", "1 Random Enemy", "2 Random Enemies",
-	"3 Random Enemies", "4 Random Enemies", "1 Ally", "All Allies",
-	"1 Ally (Dead)", "All Allies (Dead)", "Self"
-];
-
 /* DataManager Aliases and Functions */
-var lmpGamesMagicSchools_DataManager_MakeSaveContents = DataManager.makeSaveContents;
-DataManager.makeSaveContents = function(){
-	var contents = lmpGamesMagicSchools_DataManager_MakeSaveContents.call(this);
-
-	contents.magicSchools = $magicSchoolsData;
-	return contents;
-}
-
-var lmpGamesMagicSchools_DataManager_ExtractSaveContents = DataManager.extractSaveContents;
-DataManager.extractSaveContents = function(contents) {
-	lmpGamesMagicSchools_DataManager_ExtractSaveContents.apply(this,arguments);
-	bDataWasLoaded = true;
-	$magicSchoolsData = contents.magicSchools;
-};
-
-
 var lmpGamesMagicSchools_DataManager_IsDatabaseLoaded = DataManager.isDatabaseLoaded;
 DataManager.isDatabaseLoaded = function(){
 	if (!lmpGamesMagicSchools_DataManager_IsDatabaseLoaded.call(this)) { return false;}
@@ -592,29 +566,33 @@ DataManager.isDatabaseLoaded = function(){
 };
 
 DataManager.loadMagicSchoolsNoteTags = function(){
-	$dataClasses = this.processMagicSchoolsNoteTags($dataClasses, "class");
-	$dataSkills = this.processMagicSchoolsNoteTags($dataSkills, "skill");
-	$dataItems = this.processMagicSchoolsNoteTags($dataItems, "item");
+	LMPGamesCore.pluginData.magicSchools.classData = this.processMagicSchoolsNoteTags($dataClasses, "class");
+	LMPGamesCore.pluginData.magicSchools.skillData = this.processMagicSchoolsNoteTags($dataSkills, "skill");
+	LMPGamesCore.pluginData.magicSchools.itemData = this.processMagicSchoolsNoteTags($dataItems, "item");
 	$dataActors = this.processActorData($dataActors);
+	//LMPGamesCore.pluginData.magicSchools.actorData = this.processActorData($dataActors);
 };
 
 DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
+	let returnObjectList = [];
 	for(let obj of dataObj){
 		if (obj){
-			let tempMagSchoolSkillDataObj = {};
+			returnObjectList[obj.id] = {}
+			returnObjectList[obj.id].Id = obj.id;
 			if (typ == "class"){
-				obj["UsesSchools"] = false;
-				obj["MaxPrimarySchools"] = 0;
-				obj["MaxSecondarySchools"] = 0;
-				obj["ClassGrade"] = 0;
+				returnObjectList[obj.id]["UsesSchools"] = false;
+				returnObjectList[obj.id]["MaxPrimarySchools"] = 0;
+				returnObjectList[obj.id]["MaxSecondarySchools"] = 0;
+				returnObjectList[obj.id]["ClassGrade"] = 0;
 			} else if (typ == "skill"){
-				tempMagSchoolSkillDataObj["CanLearn"] = false;
-				obj["ReqLevel"] = 0;
-				obj["CostItemId"] = 0;
-				obj["GoldCostMod"] = 0;
-				obj["ItemCostMod"] = 0;
+				returnObjectList[obj.id]["CanLearn"] = false;
+				returnObjectList[obj.id]["ReqLevel"] = 0;
+				returnObjectList[obj.id]["CostItemId"] = 0;
+				returnObjectList[obj.id]["GoldCostMod"] = 0;
+				returnObjectList[obj.id]["ItemCostMod"] = 0;
+				returnObjectList[obj.id]["Alias"] = "";
 			} else if (typ == "item"){
-				obj["Alias"] = "";
+				returnObjectList[obj.id]["Alias"] = "";
 			}
 
 			if (obj.note != undefined && obj.note != ""){
@@ -635,25 +613,25 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 								if (bStartMagicSchoolsTag){
 									let noteLines = noteLine.split(":");
 									if (noteLines[0] == 'UsesSchools'){ //Classes
-										obj.UsesSchools = true;
+										returnObjectList[obj.id].UsesSchools = true;
 									} else if (noteLines[0] == "MaxPrimarySchools"){
-										obj.MaxPrimarySchools = parseInt(noteLines[1]);
+										returnObjectList[obj.id].MaxPrimarySchools = parseInt(noteLines[1]);
 									} else if (noteLines[0] == "MaxSecondarySchools"){
-										obj.MaxSecondarySchools = parseInt(noteLines[1]);
+										returnObjectList[obj.id].MaxSecondarySchools = parseInt(noteLines[1]);
 									} else if (noteLines[0] == "ClassGrade"){
-										obj.ClassGrade = parseInt(noteLines[1]);
+										returnObjectList[obj.id].ClassGrade = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'CanLearn'){ //Skills'
-										tempMagSchoolSkillDataObj.CanLearn = true;
+										returnObjectList[obj.id].CanLearn = true;
 									} else if (noteLines[0] == 'ReqLevel'){
-										obj.ReqLevel = parseInt(noteLines[1]);
+										returnObjectList[obj.id].ReqLevel = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'CostItemId'){
-										obj.CostItemId = parseInt(noteLines[1]);
+										returnObjectList[obj.id].CostItemId = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'GoldCostMod'){
-										obj.GoldCostMod = parseInt(noteLines[1]);
+										returnObjectList[obj.id].GoldCostMod = parseInt(noteLines[1]);
 									} else if (noteLines[0] == 'ItemCostMod'){
-										obj.ItemCostMod = parseInt(noteLines[1]);
-									} else if (noteLines[0] == "Alias"){
-										obj.Alias = noteLines[1];
+										returnObjectList[obj.id].ItemCostMod = parseInt(noteLines[1]);
+									} else if (noteLines[0] == "Alias"){ //Common
+										returnObjectList[obj.id].Alias = noteLines[1];
 									}
 								}
 
@@ -666,38 +644,31 @@ DataManager.processMagicSchoolsNoteTags = function(dataObj, typ){
 					}
 				}
 			}
-
-			dataObj[obj.id] = obj;
-			if (typ == "skill"){
-				tempMagSchoolSkillDataObj.id = obj.id;
-				$magicSchoolsData.skillData[obj.id] = tempMagSchoolSkillDataObj;
-			}
 		} else {
-			if (typ == "skill"){
-				$magicSchoolsData.skillData[0] = null;
-			}
+			returnObjectList[0] = undefined;
 		}
 	}
 
-	return dataObj;
+	return returnObjectList;
 }
 
 DataManager.processActorData = function($dataActors){
 	let clsId = 0;
-
 	for (let i1 = 0; i1 < $dataActors.length; i1++){
 		let currAct = $dataActors[i1];
-
 		if (currAct){
 			clsId = currAct.classId;
-			let clsData = $dataClasses.find(cls => cls && cls.id == clsId);
-
-			if (clsData.UsesSchools){
-				currAct.UsesSchools = true;
-				currAct._magicSchoolsData = {};
-				currAct._magicSchoolsData[clsId] = {
-					"PrimarySchools":{},
-					"SecondarySchools":{}
+			let clsPluginData = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == clsId);
+			if (clsPluginData) {
+				if (clsPluginData.UsesSchools) {
+					currAct.UsesSchools = true;
+					currAct._magicSchoolsData = {};
+					currAct._magicSchoolsData[clsId] = {
+						"PrimarySchools":{},
+						"SecondarySchools":{}
+					}
+				} else {
+					currAct.UsesSchools = false;
 				}
 			} else {
 				currAct.UsesSchools = false;
@@ -847,7 +818,7 @@ DataManager.buildMagicSchoolsData = function(){
 			}
 
 			newSchool.Trees = newTrees;
-			$magicSchoolsData.schools[i1] = newSchool;
+			LMPGamesCore.pluginData.magicSchools.schools[i1] = newSchool;
 		}
 
 		if (i1 == maxSchools){
@@ -886,11 +857,11 @@ Game_Interpreter.prototype.pluginCommand = function(command, args){
 }
 
 function mschoolsUnlockSkill(skillId){
-	let skill = $magicSchoolsData.skillData.find(sk => sk && sk.id == skillId);
+	let skill = LMPGamesCore.pluginData.magicSchools.skillData.find(sk => sk && sk.Id == skillId);
 	if (skill){
 		skill.CanLearn = true;
 	} else {
-		$magicSchoolsData.skillData[skillId].CanLearn = true;
+		LMPGamesCore.pluginData.magicSchools.skillData[skillId].CanLearn = true;
 	}
 }
 
@@ -916,18 +887,18 @@ var lmpGamesMagicSchools_GameActor_ChangeClass = Game_Actor.prototype.changeClas
 Game_Actor.prototype.changeClass = function(classId, keepExp){
 	lmpGamesMagicSchools_GameActor_ChangeClass.call(this, classId, keepExp);
 
-	let currClass = $dataClasses.find(cls => cls && cls.id == this._classId);
+	let currClass = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == this._classId);
 	if (currClass.UsesSchools){
 		this.getLearnedSkills();
 	}
 }
 
 Game_Actor.prototype.getLearnedSkills = function(){
-	let schoolsData = this._magicSchoolsData[this._classId];
+	let classSchoolData = this._magicSchoolsData[this._classId];
 	let schoolSkills = [];
 
-	let primarySchools = schoolsData.PrimarySchools;
-	let secondarySchools = schoolsData.SecondarySchools;
+	let primarySchools = classSchoolData.PrimarySchools;
+	let secondarySchools = classSchoolData.SecondarySchools;
 
 	if (Object.keys(primarySchools).length > 0){
 		for (let schoolId of Object.keys(primarySchools)){
@@ -971,6 +942,8 @@ Scene_MagicSchools.prototype.constructor = Scene_MagicSchools;
 Scene_MagicSchools.prototype.initialize = function(){
 	Scene_MenuBase.prototype.initialize.call(this);
 	ImageManager.loadFace($gameParty.menuActor().faceName());
+	LMPGamesCore.functions.enableWindowScrolling(true);
+	LMPGamesCore.functions.enableNameAlias(bEnableNameAlias);
 
 	this._schoolCharSelectWnd = undefined;
 	this._schoolMainWnd = undefined;
@@ -1064,7 +1037,12 @@ Scene_MagicSchools.prototype.schoolCharSelected = function(){
 	this._schoolLimitsWnd.show();
 }
 
-Scene_MagicSchools.prototype.exitSchoolScene = function() { SceneManager.pop(); }
+Scene_MagicSchools.prototype.exitSchoolScene = function() {
+	LMPGamesCore.functions.enableWindowScrolling(false);
+	LMPGamesCore.functions.enableNameAlias(false);
+	SceneManager.pop();
+}
+
 Scene_MagicSchools.prototype.createInfoWindow = function() {
 	let x = 288 + 10;
 	let y = this._helpWindow.height + 10;
@@ -1281,7 +1259,7 @@ Scene_MagicSchools.prototype.schoolListProcessCancel = function(){
 		this._schoolMainWnd.select(0);
 
 		this._schoolCostWnd.hide();
-		this._schoolLimitsWnd.show();		
+		this._schoolLimitsWnd.show();
 		this._schoolInfoWnd.updateMode(0, this._selAct, [], []);
 	} else if (wndMode == 1){
 		this._schoolSchListWnd.hide();
@@ -1397,11 +1375,11 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 	this._selectedSchoolId = this._schoolSchListWnd.getSelectedSchoolId();
 	let schoolTypeObj = {};
 
-	schoolTypeObj = $magicSchoolsData.schools[this._selectedSchoolId];
+	schoolTypeObj = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId];
 	//schoolTypeObj = JSON.parse(JSON.stringify(schoolTypeObj));
 
 	if (cmdWndMode == 0){ //Selected new school
-		let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
+		let globalTrees = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees;
 		let schoolTrees = {};
 
 		for (let treeId of Object.keys(globalTrees)){
@@ -1472,8 +1450,8 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 		let currTree = {};
 		let nextSpellId = 0;
 
-		if ($magicSchoolsData.schools.hasOwnProperty(this._selectedSchoolId)){
-			let currSchool = $magicSchoolsData.schools[this._selectedSchoolId];
+		if (LMPGamesCore.pluginData.magicSchools.schools.hasOwnProperty(this._selectedSchoolId)){
+			let currSchool = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId];
 			if (currSchool.Trees.hasOwnProperty(this._selectedTreeId)){
 				currTree = currSchool.Trees[this._selectedTreeId];
 			}
@@ -1485,8 +1463,8 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 					let skillData = $dataSkills.find(sk => sk && sk.id == currTree.TreeConfig[i1+1]);
 					if (skillData) {
 						if (bEnableMagicCrafting) {
-							let craftSkillData = $magicCraftingData.skillData.find(skl => skl && skl.id == skillData.id);
-							if (craftSkillData){
+							let craftSkillPluginData = LMPGamesCore.pluginData.magicCrafting.skillData.find(skl => skl && skl.Id == skillData.id);
+							if (craftSkillPluginData){
 								if (!craftSkillData.CanCraft && bEnableAutoUnlock) {
 									craftSkillData.CanCraft = true;
 								}
@@ -1494,7 +1472,7 @@ Scene_MagicSchools.prototype.schoolCmdProcessOk = function(){
 
 							break;
 						} else {
-							let schoolSkillData = $magicSchoolsData.skillData.find(skl => skl && skl.id == skillData.id);
+							let schoolSkillData = LMPGamesCore.pluginData.magicSchools.skillData.find(skl => skl && skl.Id == skillData.id);
 							if (schoolSkillData){
 								if (!schoolSkillData.CanLearn && bEnableAutoUnlock) {
 									schoolSkillData.CanLearn = true;
@@ -1537,21 +1515,21 @@ Scene_MagicSchools.prototype.processCmdCancel = function(){
 	} else if (cmdWndMode == 1){ //Learned new spell
 		let globalGradeType = (this._selectedSchoolType == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 		let gradeType = (this._selectedSchoolType == 0 ? 'PrimarySchools' : 'SecondarySchools');
-		let actorClass = $dataClasses.filter(cls => cls && cls.id == this._classId);
+		let actorClass = LMPGamesCore.pluginData.magicSchools.classData.filter(cls => cls && cls.Id == this._classId);
 		let clsGrade = (actorClass.length > 0 ? actorClass.ClassGrade : 0);
 		let unlearnedSkills = [];
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+			let treeGradeConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 			if (treeGradeConfig){
 				let treeSkills = treeGradeConfig.Config;
-				let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+				let learnableSkills = LMPGamesCore.pluginData.magicSchools.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.Id)));
 				let playerSchoolTrees = this._selAct._magicSchoolsData[this._classId][gradeType][this._selectedSchoolId].Trees;
 				if (Object.keys(playerSchoolTrees).length > 0){
 					if (playerSchoolTrees.hasOwnProperty(this._selectedTreeId)){
 						let playerSkills = playerSchoolTrees[this._selectedTreeId].Spells;
-						unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.id));
+						unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.Id));
 					} else {
 						bypassCheck = true;
 					}
@@ -1767,7 +1745,7 @@ Window_SchoolMain.prototype.getSelectedMode = function() { return this._selected
 Window_SchoolMain.prototype.maxItems = function() { return (this._comList.length > 0 ? this._comList[this._pageIndex].length : 0); }
 Window_SchoolMain.prototype.setActorData = function(selAct) {
 	this._selectedActor = selAct;
-	let actCls = $dataClasses.find(cls => cls && this._selectedActor._classId == cls.id);
+	let actCls = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && this._selectedActor._classId == cls.Id);
 
 	this._maxPrimaries = actCls.MaxPrimarySchools;
 	this._maxSecondaries = actCls.MaxSecondarySchools;
@@ -2365,8 +2343,8 @@ Window_SchoolList.prototype.drawItem = function(index){
 			let actClassId = this._selectedActor._classId;
 			let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 			let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-			let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
-			let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
+			let schoolPriConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].PrimaryConfig;
+			let schoolSecdConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].SecondaryConfig;
 
 			if (bEnableGoldCost){
 				if (schoolType.includes("Primary")){
@@ -2456,14 +2434,14 @@ Window_SchoolList.prototype.buildComList = function(){
 		if (this._selectedMode == 0){ //Unlocking new school
 			if (actorSchoolData && Object.keys(actorSchoolData).length > 0){
 				let actorSchoolIds = [];
-				let dataSchoolIds = Object.keys($magicSchoolsData.schools);
+				let dataSchoolIds = Object.keys(LMPGamesCore.pluginData.magicSchools.schools);
 
 				actorSchoolIds = actorSchoolIds.concat(Object.keys(actorSchoolData.PrimarySchools));
 				actorSchoolIds = actorSchoolIds.concat(Object.keys(actorSchoolData.SecondarySchools));
 
 				if (dataSchoolIds.length > 0){
 					for (let i1 = 0; i1 < dataSchoolIds.length; i1++){
-						let currSchool = $magicSchoolsData.schools[dataSchoolIds[i1]];
+						let currSchool = LMPGamesCore.pluginData.magicSchools.schools[dataSchoolIds[i1]];
 						let key = dataSchoolIds[i1];
 						if (!actorSchoolIds.includes(key)){
 							dataSchools.push(currSchool);
@@ -2658,8 +2636,8 @@ Window_SchoolList.prototype.processOk = function(){
 				let actClassId = this._selectedActor._classId;
 				let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 				let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-				let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
-				let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
+				let schoolPriConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].PrimaryConfig;
+				let schoolSecdConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].SecondaryConfig;
 				if (bEnableGoldCost){
 					goldCost = lmpGamesMagicSchools_CalculateSchoolGoldCost(
 						schoolType,
@@ -2832,16 +2810,16 @@ Window_SchoolTreeList.prototype.drawItem = function(index){
 			this._comList[this._pageIndex][index] != "Cancel"){
 		let globalGradeType = (this._selectedSchoolTypeId == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 		let gradeType = (this._selectedSchoolTypeId == 0 ? 'PrimarySchools' : 'SecondarySchools');
-		let actorClass = $dataClasses.filter(cls => cls && cls.id == classId);
+		let actorClass = LMPGamesCore.pluginData.magicSchools.classData.filter(cls => cls && cls.Id == classId);
 		let clsGrade = (actorClass.length > 0 ? actorClass[0].ClassGrade : 0);
 		let unlearnedSkills = [];
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+			let treeGradeConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 			if (treeGradeConfig){
 				let treeSkills = treeGradeConfig.Config;
-				let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+				let learnableSkills = LMPGamesCore.pluginData.magicSchools.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.Id)));
 				let playerSchoolType = actSchoolData[classId][gradeType];
 				if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 					let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -2850,7 +2828,7 @@ Window_SchoolTreeList.prototype.drawItem = function(index){
 						if (Object.keys(playerSchoolTrees).length > 0){
 							if (playerSchoolTrees.hasOwnProperty(this._selectedTreeId)){
 								let playerSkills = playerSchoolTrees[this._selectedTreeId].Spells;
-								unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.id));
+								unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.Id));
 							} else {
 								bypassCheck = true;
 							}
@@ -2901,19 +2879,19 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 			this._selectedSchoolId > 0){
 		let globalGradeType = (this._selectedSchoolTypeId == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 		let gradeType = (this._selectedSchoolTypeId == 0 ? 'PrimarySchools' : 'SecondarySchools');
-		let actorClass = $dataClasses.filter(cls => cls && cls.id == classId);
+		let actorClass = LMPGamesCore.pluginData.magicSchools.classData.filter(cls => cls && cls.Id == classId);
 		let clsGrade = (actorClass.length > 0 ? actorClass[0].ClassGrade : 0);
 		let unlearnedSkills = [];
 		let bypassCheck = false;
 		if (clsGrade != 0){
 			let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-			let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
+			let globalTrees = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees;
 
 			for (let treeId of Object.keys(globalTrees)){
-				let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[treeId][globalGradeType][gradeConfig];
+				let treeGradeConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[treeId][globalGradeType][gradeConfig];
 				if (treeGradeConfig){
 					let treeSkills = treeGradeConfig.Config;
-					let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+					let learnableSkills = LMPGamesCore.pluginData.magicSchools.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.Id)));
 					let playerSchoolType = actSchoolData[classId][gradeType];
 					if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 						let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -2922,7 +2900,7 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 							if (Object.keys(playerSchoolTrees).length > 0){
 								if (playerSchoolTrees.hasOwnProperty(treeId)){
 									let playerSkills = playerSchoolTrees[treeId].Spells;
-									unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.id));
+									unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.Id));
 								} else {
 									bypassCheck = true;
 								}
@@ -2939,7 +2917,7 @@ Window_SchoolTreeList.prototype.buildComList = function(){
 					bypassCheck = true;
 				}
 
-				let tree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[treeId];
+				let tree = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[treeId];
 				treeNames.push(tree.Name);
 				treeIds.push(treeId);
 
@@ -3112,16 +3090,16 @@ Window_SchoolTreeList.prototype.processOk = function(){
 					this._selectedSchoolId > 0 && this._selectedTreeId > 0){
 				let globalGradeType = (this._selectedSchoolTypeId == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 				let gradeType = (this._selectedSchoolTypeId == 0 ? 'PrimarySchools' : 'SecondarySchools');
-				let actorClass = $dataClasses.filter(cls => cls && cls.id == classId);
+				let actorClass = LMPGamesCore.pluginData.magicSchools.classData.filter(cls => cls && cls.Id == classId);
 				let clsGrade = (actorClass.length > 0 ? actorClass[0].ClassGrade : 0);
 				let unlearnedSkills = [];
 				let bypassCheck = false;
 				if (clsGrade != 0){
 					let gradeConfig = (clsGrade == "1" ? "GradeConfig1" : (clsGrade == "2" ? "GradeConfig2" : "GradeConfig3"));
-					let treeGradeConfig = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
+					let treeGradeConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[this._selectedTreeId][globalGradeType][gradeConfig];
 					if (treeGradeConfig){
 						let treeSkills = treeGradeConfig.Config;
-						let learnableSkills = $magicSchoolsData.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.id)));
+						let learnableSkills = LMPGamesCore.pluginData.magicSchools.skillData.filter(skl => skl && skl.CanLearn && treeSkills.includes(String(skl.Id)));
 						let playerSchoolType = actSchoolData[classId][gradeType];
 						if (playerSchoolType.hasOwnProperty(this._selectedSchoolId)){
 							let playerSchool =  actSchoolData[classId][gradeType][this._selectedSchoolId];
@@ -3130,7 +3108,7 @@ Window_SchoolTreeList.prototype.processOk = function(){
 								if (Object.keys(playerSchoolTrees).length > 0){
 									if (playerSchoolTrees.hasOwnProperty(this._selectedTreeId)){
 										let playerSkills = playerSchoolTrees[this._selectedTreeId].Spells;
-										unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.id));
+										unlearnedSkills = learnableSkills.filter(skl => skl && !playerSkills.includes(skl.Id));
 									} else {
 										bypassCheck = true;
 									}
@@ -3264,9 +3242,9 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		let spellId = this._skillIdList[this._pageIndex][index];
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-		let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
-		let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
+		let schoolPriConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].PrimaryConfig;
+		let schoolSecdConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].SecondaryConfig;
+		let skillPluginData = LMPGamesCore.pluginData.magicSchools.skillData.find(sk => sk && sk.Id == spellId);
 		let currPrtyGold = $gameParty.gold();
 		let currPrtyItems = 0;
 		let goldCost = 0;
@@ -3274,21 +3252,21 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 		let bMeetsRequirements = true;
 		let dataItm = undefined;
 
-		if (skillData) {
-			if (skillData.ReqLevel <= actLevel) {
+		if (skillPluginData) {
+			if (skillPluginData.ReqLevel <= actLevel) {
 				if (bEnableGoldCost){
 					goldCost = lmpGamesMagicSchools_CalculateSkillGoldCost(
 						schoolType,
 						schoolPriConfig,
 						schoolSecdConfig,
 						schoolIds,
-						skillData,
+						skillPluginData,
 						this._selectedSchoolId
 					);
 				}
 
 				if (bEnableItemCost){
-					costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+					costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillPluginData.CostItemId);
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
@@ -3299,7 +3277,7 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 						schoolPriConfig,
 						schoolSecdConfig,
 						schoolIds,
-						skillData,
+						skillPluginData,
 						this._selectedSchoolId
 					);
 				}
@@ -3324,13 +3302,18 @@ Window_SchoolSpellList.prototype.drawItem = function(index){
 			this.changePaintOpacity(true);
 		}
 
-		finalName = LMPGamesCore.functions.getDisplayName(this._width, skillData, this.contents);
+		let skillData = $dataSkills.find(skl => skl && skl.id == spellId);
+		if (skillPluginData) {
+			finalName = LMPGamesCore.functions.skillNameBuilder(skillData, skillPluginData, this._width, this.contents);
+		} else {
+			finalName = skillData.name;
+		}
 	}
 
 	if (this._comList[this._pageIndex][index] == "Cancel"){
 		finalName = "Cancel";
 	}
-	this.drawText(finalName, rect.x, y, w , 'center');
+	this.drawTextEx(finalName, rect.x, y);
 }
 
 Window_SchoolSpellList.prototype.buildComList = function(){
@@ -3354,7 +3337,7 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 		let actClassId = this._selectedActor._classId;
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let currActTree = this._selectedActor._magicSchoolsData[actClassId][schoolType][this._selectedSchoolId].Trees[this._selectedTreeId];
-		let clsGrade = $dataClasses.find(cls => cls && cls.id == this._selectedActor._classId).ClassGrade;
+		let clsGrade = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == this._selectedActor._classId).ClassGrade;
 		let actorSkillIds = [];
 
 		if (currActTree){
@@ -3363,7 +3346,7 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 
 		//Global Data
 		if (this._selectedTreeId > 0){
-			currGlblTree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
+			currGlblTree = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
 			treeConfigsGlbl = (this._selectedSchoolType == 0 ? currGlblTree.PrimaryGradeConfig : currGlblTree.SecondaryGradeConfig);
 			treeConfigKeys = Object.keys(treeConfigsGlbl);
 
@@ -3387,9 +3370,9 @@ Window_SchoolSpellList.prototype.buildComList = function(){
 				finalSkillIds = glblSkills.filter(gSkId => glblSkills.includes(gSkId));
 			}
 
-			let msSkillIds = $magicSchoolsData.skillData.filter(sk => sk && finalSkillIds.contains(sk.id) && sk.CanLearn)
+			let msSkillIds = LMPGamesCore.pluginData.magicSchools.skillData.filter(sk => sk && finalSkillIds.contains(sk.Id) && sk.CanLearn)
 				.reduce((lst, skl) =>{
-					lst.push(skl.id);
+					lst.push(skl.Id);
 					return lst;
 				}, []);
 
@@ -3572,25 +3555,25 @@ Window_SchoolSpellList.prototype.processOk = function(){
 				let actClassId = this._selectedActor._classId;
 				let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 				let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
-				let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
-				let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
-				let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
+				let schoolPriConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].PrimaryConfig;
+				let schoolSecdConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].SecondaryConfig;
+				let skillPluginData = LMPGamesCore.pluginData.magicSchools.skillData.find(sk => sk && sk.Id == spellId);
 
-				if (skillData) {
-					if (skillData.ReqLevel <= actLevel) {
+				if (skillPluginData) {
+					if (skillPluginData.ReqLevel <= actLevel) {
 						if (bEnableGoldCost){
 							goldCost = lmpGamesMagicSchools_CalculateSkillGoldCost(
 								schoolType,
 								schoolPriConfig,
 								schoolSecdConfig,
 								schoolIds,
-								skillData,
+								skillPluginData,
 								this._selectedSchoolId
 							);
 						}
 
 						if (bEnableItemCost){
-							costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillData.CostItemId);
+							costItemId = lmpGamesMagicSchools_GetSpellCostItemId(this._selectedSchoolId, skillPluginData.CostItemId);
 							dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 							if (dataItm){
 								currPrtyItems = $gameParty.numItems(dataItm);
@@ -3601,7 +3584,7 @@ Window_SchoolSpellList.prototype.processOk = function(){
 								schoolPriConfig,
 								schoolSecdConfig,
 								schoolIds,
-								skillData,
+								skillPluginData,
 								this._selectedSchoolId
 							);
 						}
@@ -3698,12 +3681,13 @@ Window_SchoolLimits.prototype.buildInfo = function(){
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let currPrimaries = Object.keys(this._selectedActor._magicSchoolsData[actClassId]["PrimarySchools"]).length;
 		let currSecondairies = Object.keys(this._selectedActor._magicSchoolsData[actClassId]["SecondarySchools"]).length;
-		let maxPrimaries = $dataClasses.find(cls => cls && cls.id == actClassId).MaxPrimarySchools;
-		let maxSecondaries = $dataClasses.find(cls => cls && cls.id == actClassId).MaxSecondarySchools;
+		//TODO: Create a let to store the class data and the pull this data from it instead double finding
+		let maxPrimaries = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == actClassId).MaxPrimarySchools;
+		let maxSecondaries = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == actClassId).MaxSecondarySchools;
 		let finalPrimaries = maxPrimaries - currPrimaries;
 		let finalSecondaries = maxSecondaries - currSecondairies;
 		let infoFormat = JSON.parse(mainInfoFmtTxt);
-		
+
 		if (infoFormat) {
 			let title = "Available Slots";
 			let bEnableWordwrap = false;
@@ -3828,8 +3812,8 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		let schoolType = (this._selectedSchoolType == 0 ? "PrimarySchools" : "SecondarySchools");
 		let schoolIds = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]);
 		let numSchoolsPresent = Object.keys(this._selectedActor._magicSchoolsData[actClassId][schoolType]).length;
-		let schoolPriConfig = $magicSchoolsData.schools[this._selectedSchoolId].PrimaryConfig;
-		let schoolSecdConfig = $magicSchoolsData.schools[this._selectedSchoolId].SecondaryConfig;
+		let schoolPriConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].PrimaryConfig;
+		let schoolSecdConfig = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].SecondaryConfig;
 		let currPrtyGold = $gameParty.gold();
 		let currPrtyItems = 0;
 		let goldCost = 0;
@@ -3837,7 +3821,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 		let dataItm = undefined;
 		let bMeetsLevelReq = true;
 		let infoFormat = JSON.parse(mainInfoFmtTxt);
-		
+
 		if (infoFormat) {
 			let bEnableWordwrap = false;
 			let title = "Cost Requirements";
@@ -3867,7 +3851,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 					);
 
 					if (goldCost > 0) {
-						gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+						gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", {}, {});
 						wndInfo += gldCostInfo;
 					}
 				}
@@ -3884,16 +3868,19 @@ Window_SchoolCost.prototype.drawInfo = function(){
 					dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 					if (itemCost > 0 && dataItm){
 						currPrtyItems = $gameParty.numItems(dataItm);
-						itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm);
+						let itemPluginData = LMPGamesCore.pluginData.magicSchools.itemData.find(itm => itm && itm.Id == dataItm.id);
+						if (itemPluginData) {
+							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm, itemPluginData);
+						}
 
 						wndInfo += itmCostInfo;
 					}
 				}
 			} else if (this._mode == 1) {
 				let spellId = this._selectedSkillId;
-				let skillData = $dataSkills.find(sk => sk && sk.id == spellId);
+				let skillData = LMPGamesCore.pluginData.magicSchools.skillData.find(sk => sk && sk.Id == spellId);
 				if (skillData) {
-					reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", 0);
+					reqLvlInfo = this.buildRequirementString(skillData.ReqLevel, 'level', actLevel, "", {}, {});
 					wndInfo += reqLvlInfo;
 
 					if (actLevel < skillData.ReqLevel) {
@@ -3911,7 +3898,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 						);
 
 						if (goldCost > 0){
-							gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", 0);
+							gldCostInfo = this.buildRequirementString(goldCost, 'gold', currPrtyGold, "", {}, {});
 							wndInfo += gldCostInfo;
 						}
 					}
@@ -3930,7 +3917,8 @@ Window_SchoolCost.prototype.drawInfo = function(){
 						dataItm =  $dataItems.find(itm => itm && itm.id == costItemId);
 						if (itemCost > 0 && dataItm){
 							currPrtyItems = $gameParty.numItems(dataItm);
-							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm);
+							let itemPluginData = LMPGamesCore.pluginData.magicSchools.itemData.find(itm => itm && itm.Id == dataItm.id) || {};
+							itmCostInfo = this.buildRequirementString(itemCost, 'item', currPrtyItems, dataItm, itemPluginData);
 
 							wndInfo += itmCostInfo;
 						}
@@ -3957,7 +3945,7 @@ Window_SchoolCost.prototype.drawInfo = function(){
 	}
 }
 
-Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, itmData){
+Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt, objData, pluginObjData){
 	let reqString = "";
 	if (typ == "gold"){
 		reqString = TextManager.currencyUnit + ": " + String(cost);
@@ -3966,8 +3954,8 @@ Window_SchoolCost.prototype.buildRequirementString = function(cost, typ, currAmt
 			reqString = LMPGamesCore.functions.changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
 		}
 	} else if (typ == "item") {
-		let finalName = LMPGamesCore.functions.getDisplayName(this._width, itmData, this.contents);
-		reqString = "\\i[" + itmData.iconIndex + "]" + finalName + " x" + String(cost);
+		let finalName = LMPGamesCore.functions.itemNameBuilder(objData, pluginObjData.Alias, this._width, this.contents);
+		reqString = finalName + " x" + String(cost);
 
 		if (currAmt < cost){
 			reqString = LMPGamesCore.functions.changeTextColor(reqString, 'both', reqNotMetColor, "FFFFFF")
@@ -4065,7 +4053,7 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 			for (let key of Object.keys(actorPrimaries)){
 				let currSchool = actorPrimaries[key];
 				let schoolName = currSchool.Name;
-				
+
 				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
 				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
@@ -4073,7 +4061,7 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 
 			primaryNames += schoolNames;
 		}
-		primaryNames = addBreak(primaryNames, 'end');
+		primaryNames = LMPGamesCore.functions.addBreak(primaryNames, 'end');
 
 		schoolNames = "";
 
@@ -4081,7 +4069,7 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 			for (let key of Object.keys(actorSecondaries)){
 				let currSchool = actorSecondaries[key];
 				let schoolName = currSchool.Name;
-				
+
 				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
 				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
@@ -4117,7 +4105,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		let totalText = "";
 		let title = "School Spell Trees:";
 		let treeNames = "";
-		let globalTrees = $magicSchoolsData.schools[this._selectedSchoolId].Trees;
+		let globalTrees = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees;
 
 		title = LMPGamesCore.functions.addXShift(title, 5);
 		title = LMPGamesCore.functions.addBreak(title, 'end');
@@ -4127,7 +4115,7 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 			let treeName = currTree.Name;
 			treeName = LMPGamesCore.functions.addXShift(treeName, 25);
 			treeName = LMPGamesCore.functions.addBreak(treeName, 'end');
-			
+
 			treeNames += treeName;
 		}
 
@@ -4160,8 +4148,8 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 		spellNames = LMPGamesCore.functions.addBreak(spellNames, 'end');
 		bEnableWordwrap = fmt.match(/<(?:WordWrap)>/i);
 
-		let globalTree = $magicSchoolsData.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
-		let actCls = $dataClasses.find(cls => cls && cls.id == this._selectedActor._classId);
+		let globalTree = LMPGamesCore.pluginData.magicSchools.schools[this._selectedSchoolId].Trees[this._selectedTreeId];
+		let actCls = LMPGamesCore.pluginData.magicSchools.classData.find(cls => cls && cls.Id == this._selectedActor._classId);
 		let actClsGrade = actCls.ClassGrade;
 		let gradeConfigType = (this._selectedSchoolType == 0 ? 'PrimaryGradeConfig' : 'SecondaryGradeConfig');
 		let actorConfigType = (this._selectedSchoolType == 0 ? 'PrimarySchools' : 'SecondarySchools');
@@ -4169,42 +4157,47 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 		let actorGrade = (actClsGrade == 1 ? 'GradeConfig1' : (actClsGrade == 2 ? 'GradeConfig2' : 'GradeConfig3'));
 		let globalTreeConfig = globalTreeGradeData[actorGrade].Config;
 		let learnableSkills = [];
+		let skillPluginData = [];
 		let actorSkills = [];
-		let selectActorSchool = this._selectedActor._magicSchoolsData[actCls.id][actorConfigType][this._selectedSchoolId];
+		let selectActorSchool = this._selectedActor._magicSchoolsData[actCls.Id][actorConfigType][this._selectedSchoolId];
 
 		if (Object.keys(selectActorSchool.Trees).length > 0 && selectActorSchool.Trees.hasOwnProperty(this._selectedTreeId)){
 			actorSkills = selectActorSchool.Trees[this._selectedTreeId].Spells;
 		}
 
-		let msSkillIds = $magicSchoolsData.skillData.filter(sk => sk && globalTreeConfig.contains(String(sk.id)) && sk.CanLearn)
+		let msSkillIds = LMPGamesCore.pluginData.magicSchools.skillData.filter(sk => sk && globalTreeConfig.contains(String(sk.Id)) && sk.CanLearn)
 				.reduce((lst, skl) =>{
-					lst.push(skl.id);
+					lst.push(skl.Id);
 					return lst;
 				}, []);
 
 		if (spellListDispMode == 0){
 			learnableSkills = $dataSkills.filter(sk => sk && msSkillIds.includes(sk.id));
+			skillPluginData = LMPGamesCore.pluginData.magicSchools.skillData.filter(sk => sk && msSkillIds.includes(sk.Id));
 		} else if (spellListDispMode > 0){
 			if (bEnableMagicCrafting) {
-				let craftSkillData = $magicCraftingData.skillData.filter(sk => sk && msSkillIds.includes(sk.id));
-				learnableSkills = $dataSkills.filter(sk => sk && (craftSkillData[sk.id] && ((craftSkillData[sk.id].IsRecipe && craftSkillData[sk.id].TimesCrafted == 0) || !craftSkillData[sk.id].IsRecipe)));
+				skillPluginData = LMPGamesCore.pluginData.magicSchools.skillData.filter(sk => sk && msSkillIds.includes(sk.Id) && ((sk.IsRecipe && sk.TimesCrafted == 0) || !sk.IsRecipe));
+				learnableSkills = $dataSkills.filter(sk => sk && (skillPluginData[sk.id]));
 			} else {
 				learnableSkills = $dataSkills.filter(sk => sk && msSkillIds.includes(String(sk.id)));
+				skillPluginData = LMPGamesCore.pluginData.magicSchools.skillData.filter(sk => sk && msSkillIds.includes(sk.Id));
 			}
 		}
 
-		for (let skill of learnableSkills){
-			let currSpellId = skill.id || 0;
+		for (let i1 = 0; i1 < learnableSkills.length; i1++){
+			let skillData = learnableSkills[i1];
+			let pluginData = skillPluginData[i1];
+			let currSpellId = skillData.id || 0;
 			let isLearned = false;
 
 			if (bShowLearnedLabel){
-				if (actorSkills.contains(skill.id)){
+				if (actorSkills.contains(skillData.id)){
 					isLearned = true;
 				}
 			}
 
 			if (spellListDispMode == 0){
-				let spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")" + (isLearned ? ' - Learned' : '');
+				let spellName = skillData.name + " (Lv. " + String(pluginData.ReqLevel) + ")" + (isLearned ? ' - Learned' : '');
 				spellName = LMPGamesCore.functions.addXShift(spellName, 25);
 				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
@@ -4212,11 +4205,11 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 				let spellName = "";
 
 				if (isLearned) {
-					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ") - Learned";
+					spellName = skillData.name + " (Lv. " + String(pluginData.ReqLevel) + ") - Learned";
 				} else {
-					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
+					spellName = skillData.name + " (Lv. " + String(pluginData.ReqLevel) + ")";
 
-					if (!$magicSchools.skillData[skill.id].CanLearn) {
+					if (!LMPGamesCore.pluginData.magicSchools.skillData[skillData.id].CanLearn) {
 						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
 					}
 				}
@@ -4226,14 +4219,13 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 				spellNames += spellName
 			} else if (spellListDispMode == 2){
 				let spellName = "";
-				LMPGamesCore.functions.setObfuscationChar(obfuscationChar);
-				LMPGamesCore.functions.setMaxObfuscationChars(maxObfuscationChars);
+				LMPGamesCore.functions.setObfuscationSettings(obfuscationChar, maxObfuscationChars, true);
 
 				if (isLearned) {
-					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ") - Learned";
+					spellName = skillData.name + " (Lv. " + String(pluginData.ReqLevel) + ") - Learned";
 				} else {
-					spellName = skill.name + " (Lv. " + String(skill.ReqLevel) + ")";
-					if (!$magicSchools.skillData[skill.id].CanLearn) {
+					spellName = skillData.name + " (Lv. " + String(pluginData.ReqLevel) + ")";
+					if (!LMPGamesCore.pluginData.magicSchools.skillData[skillData.id].CanLearn) {
 						spellName = LMPGamesCore.functions.obfuscateText(text);
 						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
 					}
@@ -4294,7 +4286,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		miscSkInfo = LMPGamesCore.functions.addXShift(miscSkInfo, 5);
 		miscSkInfo = LMPGamesCore.functions.addBreak(miscSkInfo, 'end');
 
-		let useOccasion = "Use Occasion: " + occLst[skillData.occ];
+		let useOccasion = "Use Occasion: " + LMPGamesCore.settings.staticLists.occList[skillData.occ];
 		useOccasion = LMPGamesCore.functions.addXShift(useOccasion, 5);
 		useOccasion = LMPGamesCore.functions.addBreak(useOccasion, 'end');
 
@@ -4325,7 +4317,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		}
 
 		if (skillData.scope > 0) {
-			let scope = "Scope: " + scopeLst[skillData.scope];
+			let scope = "Scope: " + LMPGamesCore.settings.staticLists.statusScopeList[skillData.scope];
 			scope = LMPGamesCore.functions.addXShift(scope, 5);
 			scope = LMPGamesCore.functions.addBreak(scope, 'end');
 
@@ -4339,7 +4331,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		invSkInfo = LMPGamesCore.functions.addXShift(invSkInfo, 5);
 		invSkInfo = LMPGamesCore.functions.addBreak(invSkInfo, 'end');
 
-		let evasionType = "Evasion Type: " + hitTypLst[skillData.hitType];
+		let evasionType = "Evasion Type: " + LMPGamesCore.settings.staticLists.hitTypeList[skillData.hitType];
 		evasionType = LMPGamesCore.functions.addXShift(evasionType, 25);
 		evasionType = LMPGamesCore.functions.addBreak(evasionType, 'end');
 
@@ -4377,7 +4369,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 			dmgSkInfo = LMPGamesCore.functions.addXShift(dmgSkInfo, 5);
 			dmgSkInfo = LMPGamesCore.functions.addBreak(dmgSkInfo, 'end');
 
-			let dmgType = "Damage Type: " + dmgTypLst[skillData.damage.type];
+			let dmgType = "Damage Type: " + LMPGamesCore.settings.staticLists.damageTypeList[skillData.damage.type];
 			dmgType = LMPGamesCore.functions.addXShift(dmgType, 25);
 			dmgType = LMPGamesCore.functions.addBreak(dmgType, 'end');
 
@@ -4410,11 +4402,15 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		}
 
 		let bHasEffects = false;
-		if (!hasNoEffects(skillData.effects)){
-			let bObfuscated = (spellListDispMode == 2 ? true : false);
+		if (!LMPGamesCore.functions.hasNoEffects(skillData.effects)){
+			if (spellListDispMode == 2){
+				LMPGamesCore.functions.setObfuscationSettings(obfuscationChar, maxObfuscationChars, true);
+			}
+
 			let displayEffects = LMPGamesCore.functions.buildEffectList(skillData.effects);
 			bHasEffects = true;
-			effSkInfo = LMPGamesCore.functions.generateEffectStr(displayEffects, bObfuscated);
+			effSkInfo = LMPGamesCore.functions.generateEffectStr(displayEffects);
+			LMPGamesCore.functions.resetObfuscationSettings();
 		}
 
 		totalText = totalText.concat(name, desc, miscSkInfo, invSkInfo, dmgSkInfo, effSkInfo, "", "");
@@ -4478,7 +4474,7 @@ Window_SchoolInfo.prototype.scrollSpeed = function(){
 	if (this._scrollSpeed === undefined) {
 		this._scrollSpeed = 5;
 	}
-	
+
 	return this._scrollSpeed;
 };
 
@@ -4535,7 +4531,7 @@ Window_SchoolInfo.prototype.isInsideFrame = function(){
 
 Window_SchoolInfo.prototype.processWheel = function(){
 	if (!this.isInsideFrame()) { return; }
-	
+
 	var threshold = 20;
 	if (TouchInput.wheelY >= threshold) {
 		this.scrollOriginDown(this.scrollSpeed() * 4);
@@ -4724,5 +4720,5 @@ function lmpGamesMagicSchools_CalculateSkillItemCost(schoolType, schoolPriConfig
 
 function lmpGamesMagicSchools_GetSchoolCost(baseCost, costMod, schoolMulti, numOfSchools, formula) { return eval(formula); }
 function lmpGamesMagicSchools_GetSpellCost(baseCost, costMod, skLvl, formula) { return eval(formula); }
-function lmpGamesMagicSchools_GetSchoolCostItemId(selectedSchoolId) { return ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId); }
-function lmpGamesMagicSchools_GetSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : ($magicSchoolsData.schools[selectedSchoolId].CostItemId != 0 ? $magicSchoolsData.schools[selectedSchoolId].CostItemId : defaultCostItmId)); }
+function lmpGamesMagicSchools_GetSchoolCostItemId(selectedSchoolId) { return (LMPGamesCore.pluginData.magicSchools.schools[selectedSchoolId].CostItemId != 0 ? LMPGamesCore.pluginData.magicSchools.schools[selectedSchoolId].CostItemId : defaultCostItmId); }
+function lmpGamesMagicSchools_GetSpellCostItemId(selectedSchoolId, skillCostItemId) { return (skillCostItemId != 0 ? skillCostItemId : (LMPGamesCore.pluginData.magicSchools.schools[selectedSchoolId].CostItemId != 0 ? LMPGamesCore.pluginData.magicSchools.schools[selectedSchoolId].CostItemId : defaultCostItmId)); }
