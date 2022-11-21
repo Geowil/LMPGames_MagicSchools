@@ -56,19 +56,21 @@ The general expected set up for this plugin is that each school represents one o
 
 Schools contain a multitude of settings, all of which will be covered in the Plugin Settings section.  Many of these are optional depending on the features you have enabled.
 
-One of the major components of schools are the skill trees.  These are objects that define skill progress for like skils (IE: Fire -> Fira -> Firaga) and allow to configure how and how far a particular class can delve into the skill trees.
+One of the major components of schools are the skill trees.  These are objects that define skill progress for like skills (IE: Fire -> Fira -> Firaga) and allow for specific progress configuration based on Class Grade.  Class grades will be covered shortly.
 
-This is accomplished by two settings.  The first is setting up primary and secondary skill tree configurations.
+This is accomplished using two settings.  The first is setting up primary and secondary skill tree configurations.
 
-In this plugin a "Primary School" is a school that the character can master, learn all of the spells contain with it.
+In this plugin a "Primary School" is a school that the class can master, learn all of the spells contained with it.
 
-A "Secondary School" is a school that the character can not master and can only learn up to a specific point within the tree.
+A "Secondary School" is a school that the class can not master and can only learn up to a specific point within the tree.
 
-The second setting are the Class Grade settings.  These settings are used gate certain spells to certain levels of a mage class.  For example, consider this class tree for mage:
+The second setting are the Class Grade settings.  These settings are used gate certain spells to certain tiers of classes.  For example, consider this class tree for mage:
 
 Mage, Warlock, Wizard
 
-You can configre the Mage to be a Grade 1 class, the Warlock to be a Grade 2 class, and the Wizard to be a Grade 3 class.  Then you have used the Grade configurations to set which spells from the tree each class can learn for both Primary and Secondary tree configurations.
+You can configre the Mage to be a Grade 1 class, the Warlock to be a Grade 2 class, and the Wizard to be a Grade 3 class.  Then, for each class grade you can
+configure the class progression for that class.  In this way, you can prevent the Mage class from learning a spell that you would only like available to the
+Warlock or Wizard classes.
 
 Consider a Warlock class configured as a Grade 2 class and a skill tree configured like so:
 
@@ -88,19 +90,20 @@ Consider a Warlock class configured as a Grade 2 class and a skill tree configur
 </ul>
 
 
-If the character learns the Fire School as a primary school, they will be able to learn both Fire 1 and Fire 2.
+If the warlock character learns the Fire School as a primary school, they will be able to learn both Fire 1 and Fire 2.
 
 However, if the character learns the Fire School as a secondary school, they will only be able to learn Fire 1 and at most as a Wizard be able to learn Fire 2.
 
-More grade can be added via the plugin JS file, specific instructions will be added at a later date.
+More grades can be added via the plugin JS file, instructions on modifying the plugin file to add these and other additional data can be found in the
+Advanced Configuration section below.
 
 
 ### Cost Systems
 The Item and Gold Cost Systems are optional systems to impose extra requirements on unlocking schools and learning spells.  These costs are calculated via formulas and static values configured within each school and, optionally, within a skill's note tag to supply some additional values for the calculation.
 
-The Gold System is pretty simple, turn it and go.  If you need to modify the formulas or values, check the Plugin Settings section first for important about these and how they are used.
+The Gold System is pretty simple, turn it on and go.  If you need to modify the formulas or values, check the Plugin Settings section first for important about these and how they are used.
 
-The Item Cost System is a bit more complex.  In addition to the cost formulas and static values you must also set up the item(s) to used as the cost item.  There three settings for this:
+The Item Cost System is a bit more complex.  In addition to the cost formulas and static values you must also set up the item(s) to used as the cost item.  There three potential settings for this:
     <ul>
         <li>The global cost item which applied to all schools and skills that don't have a cost item assigned</li>
         <li>The school cost item which will override the global cost item and apply to skills that do not have a cost item assigned.</li>
@@ -114,16 +117,16 @@ For more information on the settings and note tag attributes, see the respective
 This plugin allows you to change how information is displayed to the player.  For more details on this feature, please see the Spell Info Display Mode plugin setting section below.
 
 
-### Auto-Unlock
-This feature allows you to either set spells to unlock automatically once learned or, if disabled, allows you to work unlock new spells into game mechanics such as spell books, teachers, as rewards for quests, or a multitude of other possibilities.
+### Auto Learn
+This feature allows you to either set spells to unlock automatically once learned or, if disabled, allows you to work unlocking new spells into game mechanics such as spell books, teachers, as rewards for quests, or a multitude of other possibilities.
 
 If this feature is turned off, you will need to use a plugin command to enable the next spell within a tree to be learned.
 
-The functionality of this feature changes a bit if you have the Magic Crafting plugin support turned on and instead of unlocking the spell to be learned through this plugin, it enable the next spell to be crafted.
+The functionality of this feature changes a bit if you have the Magic Crafting plugin support turned on and instead of unlocking the spell to be learned through this plugin, it enables the next spell to be crafted.
 
 
 ### Crafting Plugin Support
-This plugin was originally designed to work in tandem wiht my Magic Crafting plugin, but along the way during development it was deicded that this plugin should also be able to function on its own.
+This plugin was originally designed to work in tandem with my Magic Crafting plugin, but along the way during development it was deicded that this plugin should also be able to function on its own.
 
 As such, an optional support feature for the Magic Crafting plugin has been added to this one.  When enabled, before magic be learned, unless set up otherwise, it must first be crafted.
 
@@ -387,9 +390,7 @@ Text
 		Opens plugin scene in Mode 0 for Character Id 1
 
 ## Note Tags - Optional
-	Optional if there are no note tags
 
-	This section should be used to exhaustively detail any note tags being used.
 
 ### Weapon Note Tag
 	This plugin uses note tag attributes on weapons.
