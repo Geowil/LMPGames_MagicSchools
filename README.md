@@ -1,15 +1,11 @@
 # Magic Schools Plugin
 Version Number: V2.0.0<br><br>
-
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
-Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br><br>
-
+Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
 ### Conflicts
-	None yet reported<br><br>
-
+None yet reported<br>
 ### Terms of Use
-	Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br><br>
-
+Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br>
 
 Image(s)
 
