@@ -983,6 +983,7 @@ Scene_MagicSchools.prototype.createSchoolGoldWindow = function(){
 	let x = 0;
 
 	this._schoolGoldWnd = new Window_Gold(x, y);
+	this._schoolGoldWnd.width = 288;
 	this._schoolGoldWnd.hide();
 	this.addWindow(this._schoolGoldWnd);
 }
@@ -991,7 +992,7 @@ Scene_MagicSchools.prototype.createSchoolLimitsWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 	let w = 288;
-	let h = 200;
+	let h = 175;
 
 	this._schoolLimitsWnd = new Window_SchoolLimits(x, y, w, h);
 	this._schoolLimitsWnd.hide();
@@ -1002,7 +1003,7 @@ Scene_MagicSchools.prototype.createSchoolCostWindow = function(){
 	let y = this._schoolMainWnd.getHeight() + this._helpWindow.height + 20;
 	let x = 0;
 	let w = 288;
-	let h = 200;
+	let h = 175;
 
 	this._schoolCostWnd = new Window_SchoolCost(x, y, w, h);
 	this._schoolCostWnd.hide();
@@ -1013,7 +1014,7 @@ Scene_MagicSchools.prototype.createMainWindow = function() {
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 205;
+	let h = 230;
 	let w = 288;
 
 	this._schoolMainWnd = new Window_SchoolMain(x, y, w, h, this._schoolInfoWnd);
@@ -1070,7 +1071,7 @@ Scene_MagicSchools.prototype.createSchoolTypeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 205;
+	let h = 230;
 	let w = 288;
 
 	this._schoolSchTypeListWnd = new Window_SchoolTypeList(x, y, w, h);
@@ -1114,7 +1115,7 @@ Scene_MagicSchools.prototype.goBackToSchoolMain = function(){
 Scene_MagicSchools.prototype.createSchoolListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10;
-	let h = 205;
+	let h = 230;
 	let w = 288;
 
 	this._schoolSchListWnd = new Window_SchoolList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
@@ -1185,7 +1186,7 @@ Scene_MagicSchools.prototype.createSchoolTreeListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 205;
+	let h = 230;
 	let w = 288;
 
 	this._schoolTreeListWnd = new Window_SchoolTreeList(x, y, w, h, this._schoolInfoWnd, this._helpWindow);
@@ -1224,7 +1225,7 @@ Scene_MagicSchools.prototype.createSpellListWindow = function(){
 	let x = 0;
 	let y = this._helpWindow.height + 10
 
-	let h = 205;
+	let h = 230;
 	let w = 288;
 
 	this._schoolSpellListWnd = new Window_SchoolSpellList(x, y, w, h, this._schoolInfoWnd, this._schoolCostWnd);
@@ -3036,6 +3037,16 @@ Window_SchoolSpellList.prototype.resetPallete = function(){
 	this.refresh();
 }
 
+Window_SchoolSpellList.prototype.itemRect = function(index) {
+	var rect = new Rectangle();
+    var maxCols = this.maxCols();
+    rect.width = this.itemWidth();
+    rect.height = this.itemHeight() - 2;
+    rect.x = index % maxCols * (rect.width + this.spacing()) - this._scrollX;
+    rect.y = Math.floor(index / maxCols) * rect.height - this._scrollY;
+    return rect;
+};
+
 Window_SchoolSpellList.prototype.drawItem = function(index){
 	let rect = this.itemRectForText(index);
 	let x = rect.width/2;
@@ -3928,6 +3939,11 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		for (let key of Object.keys(globalTrees)){
 			let currTree = globalTrees[key];
 			let treeName = currTree.Name;
+			let iconPrefix = "";
+			if (currTree.IconId != 0) {
+				iconPrefix = LMPGamesCore.functions.iconPrefixBuilder(currTree.IconId);
+			}
+			treeName = iconPrefix + treeName;
 			treeName = LMPGamesCore.functions.addXShift(treeName, 25);
 			treeName = LMPGamesCore.functions.addBreak(treeName, 'end');
 
@@ -4102,7 +4118,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		miscSkInfo = LMPGamesCore.functions.addXShift(miscSkInfo, 5);
 		miscSkInfo = LMPGamesCore.functions.addBreak(miscSkInfo, 'end');
 
-		let useOccasion = "Use Occasion: " + LMPGamesCore.settings.staticLists.occList[skillData.occ];
+		let useOccasion = "Use Occasion: " + LMPGamesCore.settings.staticLists.occList[skillData.occasion];
 		useOccasion = LMPGamesCore.functions.addXShift(useOccasion, 5);
 		useOccasion = LMPGamesCore.functions.addBreak(useOccasion, 'end');
 
