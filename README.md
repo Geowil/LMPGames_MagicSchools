@@ -1,17 +1,17 @@
 # Magic Schools Plugin
-	Version Number: V2.0.0<br><br>
+Version Number: V2.0.0<br><br>
 
-	Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
-	Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br><br>
+Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
+Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br><br>
 
-	### Conflicts
-		None yet reported<br><br>
+### Conflicts
+	None yet reported<br><br>
 
-	### Terms of Use
-		Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br><br>
+### Terms of Use
+	Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br><br>
 
 
-	Image(s)
+Image(s)
 
 ## What is This?
 This plugin is designed to allow you to alter how players learn magic in your game.  This is accomplished by setting elemental schools of magic and then assigning spells to trees within those schools.
