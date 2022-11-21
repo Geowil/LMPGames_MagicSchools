@@ -3867,8 +3867,14 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 		if (Object.keys(actorPrimaries).length > 0){
 			for (let key of Object.keys(actorPrimaries)){
 				let currSchool = actorPrimaries[key];
+				let currSchoolGlobal = magicSchoolsPluginData[key];
 				let schoolName = currSchool.Name;
+				let iconPrefix = "";
+				if (currSchoolGlobal.IconId != 0) {
+					iconPrefix = LMPGamesCore.functions.iconPrefixBuilder(currSchoolGlobal.IconId);
+				}
 
+				schoolName = iconPrefix + schoolName;
 				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
 				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
@@ -3883,8 +3889,14 @@ Window_SchoolInfo.prototype.mainInfo = function(){
 		if (Object.keys(actorSecondaries).length > 0){
 			for (let key of Object.keys(actorSecondaries)){
 				let currSchool = actorSecondaries[key];
+				let currSchoolGlobal = magicSchoolsPluginData[key];
 				let schoolName = currSchool.Name;
+				let iconPrefix = "";
+				if (currSchoolGlobal.IconId != 0) {
+					iconPrefix = LMPGamesCore.functions.iconPrefixBuilder(currSchoolGlobal.IconId);
+				}
 
+				schoolName = iconPrefix + schoolName;
 				schoolName = LMPGamesCore.functions.addXShift(schoolName, 25);
 				schoolName = LMPGamesCore.functions.addBreak(schoolName, 'end');
 				schoolNames += schoolName;
@@ -3928,6 +3940,12 @@ Window_SchoolInfo.prototype.treeInfo = function(){
 		for (let key of Object.keys(globalTrees)){
 			let currTree = globalTrees[key];
 			let treeName = currTree.Name;
+			let iconPrefix = "";
+			if (currTree.IconId != 0) {
+				iconPrefix = LMPGamesCore.functions.iconPrefixBuilder(currTree.IconId);
+			}
+
+			treeName = iconPrefix + treeName;
 			treeName = LMPGamesCore.functions.addXShift(treeName, 25);
 			treeName = LMPGamesCore.functions.addBreak(treeName, 'end');
 
@@ -4004,6 +4022,7 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 			let skillPluginData = pluginSkills[i1];
 			let currSpellId = skillData.id || 0;
 			let isLearned = false;
+			let requiredLevel = lmpgamesMagicSchools_GetRequiredLevel(actCls.Id, skillPluginData.RequiredLevels);
 
 			if (magicSchoolParams.ShowLearnedLabel){
 				if (actorSkills.contains(skillData.id)){
@@ -4012,18 +4031,17 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 			}
 
 			if (magicSchoolParams.InfoDisplayMode == 0){
-				let requiredLevel = lmpgamesMagicSchools_GetRequiredLevel(actCls.Id, skillPluginData.RequiredLevels);
-				let spellName = skillData.name + " (Lv. " + String(requiredLevel) + ")" + (isLearned ? ' - Learned' : '');
+				let spellName = LMPGamesCore.functions.skillNameBuilder(skillData, skillPluginData.Alias, this._width, this.contents);
+				spellName += " (Lv. " + String(requiredLevel) + ")" + (isLearned ? ' - Learned' : '');
 				spellName = LMPGamesCore.functions.addXShift(spellName, 25);
 				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
 			} else if (magicSchoolParams.InfoDisplayMode == 1) {
-				let spellName = "";
-
+				let spellName = LMPGamesCore.functions.skillNameBuilder(skillData, skillPluginData.Alias, this._width, this.contents);
 				if (isLearned) {
-					spellName = skillData.name + " (Lv. " + String(skillPluginData.ReqLevel) + ") - Learned";
+					spellName += " (Lv. " + String(requiredLevel) + ") - Learned";
 				} else {
-					spellName = skillData.name + " (Lv. " + String(skillPluginData.ReqLevel) + ")";
+					spellName += " (Lv. " + String(requiredLevel) + ")";
 
 					if (!LMPGamesCore.skillPluginData.skillData[skillData.id].CanLearn) {
 						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
@@ -4034,15 +4052,14 @@ Window_SchoolInfo.prototype.spellInfo = function(){
 				spellName = LMPGamesCore.functions.addBreak(spellName, 'end');
 				spellNames += spellName
 			} else if (magicSchoolParams.InfoDisplayMode == 2){
-				let spellName = "";
 				LMPGamesCore.functions.setObfuscationSettings(magicSchoolParams.ObfuscationChar, magicSchoolParams.MaxObfuscationChars, true);
+				let spellName = LMPGamesCore.functions.skillNameBuilder(skillData, skillPluginData.Alias, this._width, this.contents);
 
 				if (isLearned) {
-					spellName = skillData.name + " (Lv. " + String(skillPluginData.ReqLevel) + ") - Learned";
+					spellName += " (Lv. " + String(skillPluginData.ReqLevel) + ") - Learned";
 				} else {
-					spellName = skillData.name + " (Lv. " + String(skillPluginData.ReqLevel) + ")";
+					spellName += " (Lv. " + String(skillPluginData.ReqLevel) + ")";
 					if (!skillPluginData.CanLearn) {
-						spellName = LMPGamesCore.functions.obfuscateText(text);
 						spellName = LMPGamesCore.functions.changeTextColor(spellName, 'both', 8, 0);
 					}
 				}
@@ -4102,7 +4119,7 @@ Window_SchoolInfo.prototype.spellDataInfo = function(){
 		miscSkInfo = LMPGamesCore.functions.addXShift(miscSkInfo, 5);
 		miscSkInfo = LMPGamesCore.functions.addBreak(miscSkInfo, 'end');
 
-		let useOccasion = "Use Occasion: " + LMPGamesCore.settings.staticLists.occList[skillData.occ];
+		let useOccasion = "Use Occasion: " + LMPGamesCore.settings.staticLists.occList[skillData.occasion];
 		useOccasion = LMPGamesCore.functions.addXShift(useOccasion, 5);
 		useOccasion = LMPGamesCore.functions.addBreak(useOccasion, 'end');
 
