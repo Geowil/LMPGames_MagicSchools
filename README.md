@@ -1,25 +1,31 @@
 # Magic Schools Plugin
-Version Number: V2.0.0<br><br>
+Version Number: V2.0.0<br<>
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
-Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
+Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br><br>
+
 ### Conflicts
-None yet reported<br>
+None yet reported<br><br>
+
 ### Terms of Use
-Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br>
+Free non-commercially or commercially; just give credit.  Copies of games appriciated, but not required.<br><br>
+
 
 Image(s)
+
 
 ## What is This?
 This plugin is designed to alter how players learn magic in your game.  This is accomplished by setting elemental schools of magic and then assigning spells to trees within those schools.
 
-While designed with spells in mind, this plugin can be used to set up any kind of hierarchical skill structure, such as schools of martial arts.
+While designed with spells in mind, this plugin can be used to set up any kind of hierarchical skill structure, such as schools of martial arts.<br>
+
 
 ## Installation Instructions
 Download the plugin JS file from the files section above, or grab it from the project zip, and place it into your js/plugins folder.
 
 In your game project, open the plugin manager and add a new plugin.  Select LMPGames_MagicSchools from the drop down list and configure the plugin as needed.
 
-More information about plugin settings can be found below.
+More information about plugin settings can be found below.<br>
+
 
 ## Requirements
 There are some required third party plugins:
@@ -34,7 +40,7 @@ Optional Plugins:
     <ul>
         <li>This is required if you enable the Crafting Support plugin setting</li>
     </ul>
-</ul>
+</ul><br>
 
 
 ## How does it Work?
@@ -42,9 +48,13 @@ This plugin makes use of several plugin settings objects to create a configurati
 
 Note tag attributes are also employed for a variety of features.  More information on those can be found in the Note Tags section below.
 
-For more detailed information on the plugin and help with configuration, see the Features and Configuration sections below.
+For more detailed information on the plugin and help with configuration, see the Features and Configuration sections below.<br><br>
+
 
 ## Features
+This section contains a breif description of all of the major features of the plugin.  If any more detail can be given, normally those details will be located in lower sections.<br>
+
+
 ### Schools
 The general expected set up for this plugin is that each school represents one of the elements you have defined in the Types database tab.
 
@@ -54,16 +64,19 @@ One of the major components of schools are the skill trees.  These are objects t
 
 This is accomplished using two settings.  The first is setting up primary and secondary skill tree configurations.
 
-In this plugin a "Primary School" is a school that the class can master, learn all of the spells contained with it.
+A **Primary School** is a school that can be mastered by the class tree that has learned it.  "Mastering" means that all of the skills configured in each tree can be learned by at least one of the classes within the class tree; this would normally be the last class in a class tree.
 
-A "Secondary School" is a school that the class can not master and can only learn up to a specific point within the tree.
+A **Secondary School** is a school that cannot be mastered by any classes in a given class tree that has learned it.
 
-The second setting are the Class Grade settings.  These settings are used gate certain spells to certain tiers of classes.  For example, consider this class tree for mage:
+These are the intended usage for Primary and Secondary schools; enterprising game devs may find intersting ways to utilize these outside of their stated purposes.<br>
+
+
+The second of the settings are the **Class Grade** settings.  These settings are used gate certain skills to certain tiers of classes.  For example, consider this class tree for mage:
 
 Mage, Warlock, Wizard
 
 You can configre the Mage to be a Grade 1 class, the Warlock to be a Grade 2 class, and the Wizard to be a Grade 3 class.  Then, for each class grade you can
-configure the class progression for that class.  In this way, you can prevent the Mage class from learning a spell that you would only like available to the
+configure the class progression for that class.  In this way, you can prevent the Mage class from learning a skill that you would only like available to the
 Warlock or Wizard classes.
 
 Consider a Warlock class configured as a Grade 2 class and a skill tree configured like so:
@@ -396,7 +409,9 @@ This section details all of the configuration options for a school if it is lear
 ♦️This setting is required if you have enabled the Gold Cost system<br>
 This setting defines the formula for calculating gold costs for learning spells from the original primary tree a character has learned.<br><br>
 
-There are some key values that should always be present in any formula you happen to set up here.  These are the baseCost, skLvl, and costMod variables.  These correspond to variables in the plugin coding and are required for the formula to work properly.
+There are some key values that should always be present in any formula you happen to set up here.  These are the baseCost, skLvl, and costMod variables.  These correspond to variables in the plugin coding and are required for the formula to work properly.<br>
+
+The initial primary school separated from others so that the cost of the spells can be controlled differently and give the player a beneficial discount in their prefered school.
 
 
 **Type**<br>
@@ -404,7 +419,43 @@ Text
 
 
 
-#####
+##### Initial Primary School Spell Base Cost
+**Description**<br>
+♦️This setting is required if you have enabled the Gold Cost System.<br>
+This setting sets the default base gold cost value for skills from the initial primary school.  This is used to replace the baseCost placeholder variable in the initial primary school gold cost formula.<br>
+
+
+**Type**<br>
+Integer
+
+
+
+##### Initial Primary School Spell Cost Modifier
+**Description**<br>
+♦️This setting is required if you have enabled the Gold Cost System.<br>
+This setting sets the default gold cost modifier value for skills from the initial primary school.  This is used to replace the costMod placeholder variable in the initial primary school gold cost fomrula.<br>
+
+
+**Type**<br>
+Integer
+
+
+
+##### Initial Primary School Spell Item Base Cost
+**Description**<br>
+♦️This setting is required if you have enabled the Item Cost System.<br>
+This setting sets the default base item cost value for skills from the initial primary school.  This is used to replace the baseCost placeholder variable in the initial primary school item cost formula.<br>
+
+
+**Type**<br>
+Integer
+
+
+
+##### Initial Primary School Spell Item Cost Modifier
+**Description**<br>
+♦️This setting is required if you have enabled the Item Cost System.<br>
+
 
 
 ## Plugin Commands - Optional
