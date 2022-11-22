@@ -1,9 +1,5 @@
-$\definecolor{test}{RGB}{255,100,100}$
-
 # Magic Schools Plugin
-${\color{test}Version Number: V2.0.0}$<br><br>
-
-<span style="color:red">text</span>
+Version Number: V2.0.0<br><br>
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
 Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
 ### Conflicts
@@ -332,29 +328,18 @@ A80000
 
 
 
-### School Settings
+### School Configuration
 This section will break down a school setting.  To remove or add school settings from the plugin, please see the Configuration section above where the steps to do so are detailed.  *If you need to modify the number of schools needed, please wait until after following those steps before continuing here for help with configuring the school settings*.
 
 Each school setting is identified with the word "School" followed by a number.  This number is required and is extremely important for the operation of the plugin.  Below we will cover the School setting object; this object is the same for every school you configure the plugin to have.
 
 
-#### Name
-**Description**<br>
-`#CC2200`This setting is required<br>
-This is the name for the school.  Generally this will be the name of the element that this school represents.
-
-**Type**<br>
-Text
-
-
-#### Trees
-This is an inner object that contains the configuration setting for each tree within the school.  To add or remove trees from a school, see the Configuration section above.
-
-
+#### General Settings
+This section details general confifuration paramters.
 
 ##### Id
 **Description**<br>
-This setting is required<br>
+♦️This setting is required<br>
 This is the ID for the tree.  This should be the same value as the number in the Tree #.
 
 
@@ -364,8 +349,62 @@ Text
 
 
 ##### Name
+**Description**<br>
+♦️This setting is required<br>
+This is the name for the school.
 
 
+**Type**<br>
+Text
+
+
+
+##### Alias
+**Description**<br>
+This setting is optional<br>
+This setting can be used to define a shortened name for display if the full name is too long or if an icon pushes the name outside of the window.
+
+
+**Type**<br>
+Text
+
+
+
+##### Trees
+**Description**<br>
+For more information see Tree Configuration section.
+
+
+
+##### Cost Item Id
+**Description**<br>
+♦️This setting is required if the Item Cost System is turned on.<br>
+This defines the item that will be used by the plugin, globally unless overriden by a higher ranking setting, for the cost item.
+
+
+**Type**<br>
+Item
+
+
+
+#### Primary School Configuration
+This section details all of the configuration options for a school if it is learned as a primary school.
+
+
+##### Initial Primary School Spell Gold Formula
+**Description**<br>
+♦️This setting is required if you have enabled the Gold Cost system<br>
+This setting defines the formula for calculating gold costs for learning spells from the original primary tree a character has learned.<br><br>
+
+There are some key values that should always be present in any formula you happen to set up here.  These are the baseCost, skLvl, and costMod variables.  These correspond to variables in the plugin coding and are required for the formula to work properly.
+
+
+**Type**<br>
+Text
+
+
+
+#####
 
 
 ## Plugin Commands - Optional
