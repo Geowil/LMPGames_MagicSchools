@@ -1,5 +1,7 @@
+---
 header-includes: \usepackage{xcolor}
 \definecolor{test}{RGB}{255,100,100}
+---
 
 # Magic Schools Plugin
 {\color{test}Version Number: V2.0.0}<br><br>
