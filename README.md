@@ -10,12 +10,12 @@ Free non-commercially or commercially; just give credit.  Copies of games appric
 Image(s)
 
 ## What is This?
-This plugin is designed to allow you to alter how players learn magic in your game.  This is accomplished by setting elemental schools of magic and then assigning spells to trees within those schools.
+This plugin is designed to alter how players learn magic in your game.  This is accomplished by setting elemental schools of magic and then assigning spells to trees within those schools.
 
 While designed with spells in mind, this plugin can be used to set up any kind of hierarchical skill structure, such as schools of martial arts.
 
 ## Installation Instructions
-Download the plugin JS file from the files section above and place it into your js/plugins folder.
+Download the plugin JS file from the files section above, or grab it from the project zip, and place it into your js/plugins folder.
 
 In your game project, open the plugin manager and add a new plugin.  Select LMPGames_MagicSchools from the drop down list and configure the plugin as needed.
 
@@ -38,13 +38,11 @@ Optional Plugins:
 
 
 ## How does it Work?
-This plugin uses plugin setting objects to configure each school.  Each school has some specific settings that apply only to that school.  Other settings override global settings or are overridable by lower level settings.
+This plugin makes use of several plugin settings objects to create a configuration for each school.  These in turn have child objects to define the skill tree and those have their own to define how class grades can access the skills of those trees.  Each school can be adjusted to your needs and new schools can be added if needed.
 
-Each school has a list of tree objects that contain two methods of configuration for each tree.  These are the Primary and Secondary configuration settings.
+Note tag attributes are also employed for a variety of features.  More information on those can be found in the Note Tags section below.
 
-Each of these is broken down into grade settings which relate to the class learning the spells from the school.
-
-For more detailed information, see the Features section below.
+For more detailed information on the plugin and help with configuration, see the Features and Configuration sections below.
 
 ## Features
 ### Schools
@@ -52,7 +50,7 @@ The general expected set up for this plugin is that each school represents one o
 
 Schools contain a multitude of settings, all of which will be covered in the Plugin Settings section.  Many of these are optional depending on the features you have enabled.
 
-One of the major components of schools are the skill trees.  These are objects that define skill progress for like skills (IE: Fire -> Fira -> Firaga) and allow for specific progress configuration based on Class Grade.  Class grades will be covered shortly.
+One of the major components of schools are the skill trees.  These are objects that define skill progression for similar skills (IE: Fire -> Fira -> Firaga) and allow for specific progress configuration based on Class Grade.  Class grades will be covered shortly.
 
 This is accomplished using two settings.  The first is setting up primary and secondary skill tree configurations.
 
@@ -151,7 +149,7 @@ False
 
 #### Enable Gold Cost System
 **Description**<br>
-When enabled, activates a cost system that calculates a currency cost to unlock shools and learn spells.
+When enabled, activates a cost system that calculates a currency cost to unlock shools and learn skills.
 
 Formulas that are used in these calculations can be found in the settings for each school.
 
@@ -164,7 +162,7 @@ False
 
 #### Enable Item Cost System
 **Description**<br>
-When enabled, activates a cost system that calculates a cost in items to unlock schools and learn spells.
+When enabled, activates a cost system that calculates a cost in items to unlock schools and learn skills.
 
 Formuals that are used in these calculations can be found in the settings for each school.
 
@@ -172,7 +170,7 @@ When enabled, some plugin settings become required.  At the very least, the Defa
 
 If there are any skills with a cost item id assigned, these will override the school setting or default settings.
 
-If there any schools with a cost item id assigned, these will override the default setting and be applied to spells within the trees of that school.
+If there any schools with a cost item id assigned, these will override the default setting and be applied to skills within the trees of that school.
 
 
 **Type**<br>
@@ -207,15 +205,15 @@ There are three Modes:
 <ul>
     <li>Mode 0</li>
     <ul>
-        This mode is the default mode.  It shows spells that you are able to learn and hides those spells that have yet to be unlocked.
+        This mode is the default mode.  It shows skills that you are able to learn and hides those skills that have yet to be unlocked.
     </ul>
     <li>Mode 1</li>
     <ul>
-        In this mode, all spells in a tree are shown, however if a spell is not learnable it will show up with a different text color than ones that can be or have learned.
+        In this mode, all skills in a tree are shown, however if a skill is not learnable it will show up with a different text color than ones that can be or have beeen learned.
     </ul>
     <li>Mode 2</li>
     <ul>
-        I this mode, all spells in the tree are shown, however if a spell is not learnable it will show up obfuscated based on the obfuscation plugin setting values.
+        In this mode, all skills in the tree are shown; however, if a skill is not learnable it will show up obfuscated based on the obfuscation plugin setting values.
     </ul>
 </ul>
 
@@ -262,11 +260,13 @@ Number (1-20)
 
 
 
-#### Enable Spell Auto-Unlock
+#### Enable Spell Auto-Learn
 **Description**<br>
-When enabled, this setting will automatically unlock the next spell in a tree when a spell has been learned.  When Magic Crafting support is enabled; instead of unlocking the spell in the school tree, the spell is marked as "Craftable" and can be immediatly crafted.
+When enabled, this setting will automatically unlock the next skill in a tree when a skill has been learned.
 
-When this setting is disabled, you will be required to manually enable spells via the Enable Learning plugin command for this plugin or the Enable Crafting plugin command if you have support for the Magic Crafting plugin enabled.
+When Magic Crafting support is enabled; instead of unlocking the skill in the school tree, the skill is marked as "Craftable" and can be immediatly crafted.
+
+When this setting is disabled, you will be required to manually enable skills via the Enable Learning plugin command for this plugin or the Enable Crafting plugin command if you have support for the Magic Crafting plugin enabled.
 
 **Type**<br>
 Boolean (True/False)
@@ -278,7 +278,7 @@ False
 
 #### Enable Learned Label
 **Description**<br>
-When enabled, this setting will add a " - Learned" label to spell names in the tree list window spell info so that players can easily keep track of what they have learned from each tree.
+When enabled, this setting will add a " - Learned" label to skill names in the tree list window skill info so that players can easily keep track of what they have learned from each tree.
 
 **Type**<br>
 Boolean (True/False)
@@ -290,9 +290,9 @@ False
 
 #### Enable Name Aliasing
 **Description**<br>
-When enabled, this setting allows for long item and spell names to be displayed by an abbrviated name so that they can be properly shown in some plugin windows.
+When enabled, this setting allows for long item, school, school tree, and skill names to be displayed by an abbrviated name so that they can be properly shown in some plugin windows.
 
-When this is enabled, note tag attributes for skills and items are not required, however, in order for a name to be shortened, a note tag attribute must be added to the skill or item.  More information on these note tags can be found in the respective tag section below.
+When this is enabled, note tag attributes for skills and items are not required, however, in order for a name to be shortened, a note tag attribute must be added to the skill or item.  More information on these note tags can be found in the respective tag section below or check the Configuration section for schools and trees.
 
 **Type**<br>
 Boolean
@@ -316,7 +316,7 @@ Note
 
 
 
-#### Requirement Not Met Color
+#### Failed Requirement Color
 **Description**<br>
 This setting sets the text color for when there are requirements that the player doesn't meet when unlocking a school or skill.  The format of the value in this setting is an 8-digit color hex code without the hashtag.
 
@@ -329,7 +329,7 @@ A80000
 
 
 ### School Settings
-This section will break down a school setting.  To remove or add school settings from the plugin, please see the Configuration section above where the steps to do so are detailed.  If you need to modify the number of schools needed, please wait until after following those steps before continuing here for help with configuring the school settings.
+This section will break down a school setting.  To remove or add school settings from the plugin, please see the Configuration section above where the steps to do so are detailed.  *If you need to modify the number of schools needed, please wait until after following those steps before continuing here for help with configuring the school settings*.
 
 Each school setting is identified with the word "School" followed by a number.  This number is required and is extremely important for the operation of the plugin.  Below we will cover the School setting object; this object is the same for every school you configure the plugin to have.
 
