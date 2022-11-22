@@ -1,7 +1,7 @@
 
 
 # Magic Schools Plugin
-<div style="color:#FF3333;'>Version Number: V2.0.0</div><br><br>
+<div style="color:#FF3333;">Version Number: V2.0.0</div><br><br>
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
 Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
 ### Conflicts
