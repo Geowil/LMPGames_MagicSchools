@@ -1,5 +1,7 @@
+\definecolor{test}{RGB}{255,100,100}
+
 # Magic Schools Plugin
-Version Number: V2.0.0<br><br>
+{\color{test}Version Number: V2.0.0<br><br>}
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
 Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
 ### Conflicts
@@ -336,7 +338,7 @@ Each school setting is identified with the word "School" followed by a number.  
 
 #### Name
 **Description**<br>
-This setting is required<br>
+`#CC2200`This setting is required<br>
 This is the name for the school.  Generally this will be the name of the element that this school represents.
 
 **Type**<br>
