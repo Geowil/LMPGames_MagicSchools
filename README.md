@@ -1,4 +1,5 @@
 $\definecolor{test}{RGB}{255,100,100}$
+$\fontfamily{Courier}\selectfont$
 
 # Magic Schools Plugin
 ${\color{test}Version Number: V2.0.0}$<br><br>
