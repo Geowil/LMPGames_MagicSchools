@@ -1,7 +1,7 @@
-\definecolor{test}{RGB}{255,100,100}
+$$\definecolor{test}{RGB}{255,100,100}$$
 
 # Magic Schools Plugin
-{\color{test}Version Number: V2.0.0<br><br>}
+$${\color{test}Version Number: V2.0.0<br><br>}$$
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
 Demo Link: [Version 2.0.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Demo_V200.zip)<br>
 ### Conflicts
