@@ -1,8 +1,9 @@
 $\definecolor{test}{RGB}{255,100,100}$
-$\fontfamily{Courier}\selectfont$
+
 
 # Magic Schools Plugin
-${\color{test}Version Number: V2.0.0}$<br><br>
+${\fontfamily{Courier}\selectfont
+${\color{test}Version Number: V2.0.0}$}$<br><br>
 
 <span style="color:red">text</span>
 Project Link: [Version 2.0.0](http://www.lmpgames.com/RMMV/Plugins/LMPGames_MagicSchools_Prj_V200.zip)<br>
